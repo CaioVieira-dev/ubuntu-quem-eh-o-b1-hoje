@@ -1,7 +1,8 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { FaArrowDown, FaPencil, FaTrash } from "react-icons/fa6";
+import { FaArrowDown, FaArrowLeft, FaPencil, FaTrash } from "react-icons/fa6";
+import { FaSave } from "react-icons/fa";
 import { Form, FormControl, FormField, FormItem } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { z } from "zod";
@@ -78,6 +79,19 @@ export function ActiveTicketsTable() {
       return [...oldTickets, newTicket];
     });
   }, []);
+  const updateTicket = useCallback(
+    (
+      newTicket: { card: string; b1?: string; b2?: string },
+      updatedIndex: number,
+    ) => {
+      setActiveTickets((oldTickets) => {
+        return oldTickets.map((old, index) =>
+          updatedIndex === index ? { ...old, ...newTicket } : old,
+        );
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     if (form.formState.isSubmitSuccessful) {
@@ -86,7 +100,7 @@ export function ActiveTicketsTable() {
       setSelectKey(+new Date());
     }
   }, [form, form.formState.isSubmitSuccessful]);
-  console.log(selectKey);
+
   return (
     <>
       <h3 className="flex gap-2 text-xl font-extrabold tracking-tight sm:text-[2rem]">
@@ -105,22 +119,18 @@ export function ActiveTicketsTable() {
           </TableHeader>
           <TableBody>
             {activeTickets.map(({ b1, b2, card }, index) => (
-              <TableRow key={`${card}-${index}`}>
-                <TableCell colSpan={3}>{card}</TableCell>
-                <TableCell>{b1}</TableCell>
-                <TableCell>{b2}</TableCell>
-                <TableCell className="flex gap-2" colSpan={1}>
-                  <Button size={"icon"} variant={"ghost"}>
-                    <FaPencil />
-                  </Button>
-                  <Button size={"icon"} variant={"ghost"}>
-                    <FaTrash />
-                  </Button>
-                </TableCell>
-              </TableRow>
+              <OpenTicketRow
+                key={`${card}-${index}`}
+                card={card}
+                users={users}
+                b1={b1}
+                b2={b2}
+                update={(updatedTicket) => updateTicket(updatedTicket, index)}
+              />
             ))}
           </TableBody>
         </Table>
+        {/* new ticket form */}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(addNewTicket)}>
             <Table className="table-fixed">
@@ -210,5 +220,109 @@ export function ActiveTicketsTable() {
         </Form>
       </div>
     </>
+  );
+}
+
+function OpenTicketRow({
+  card,
+  b1,
+  b2,
+  users,
+  update,
+}: {
+  card: string;
+  b1?: string;
+  b2?: string;
+  users: { name: string; id: number }[];
+  update: (updatedTicket: { card: string; b1?: string; b2?: string }) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [updatedCard, setUpdatedCard] = useState(card);
+  const [updatedB1, setUpdatedB1] = useState(b1);
+  const [updatedB2, setUpdatedB2] = useState(b2);
+
+  const toggleIsEditing = useCallback(() => setIsEditing((last) => !last), []);
+  const resetUpdatedFields = useCallback(() => {
+    setUpdatedCard("");
+    setUpdatedB1("");
+    setUpdatedB2("");
+    toggleIsEditing();
+  }, [toggleIsEditing]);
+  const updateTicket = useCallback(() => {
+    if (updatedCard) {
+      update({ card: updatedCard, b1: updatedB1, b2: updatedB2 });
+      toggleIsEditing();
+    }
+  }, [toggleIsEditing, update, updatedB1, updatedB2, updatedCard]);
+
+  if (isEditing) {
+    return (
+      <TableRow className="hover:bg-transparent">
+        <TableCell colSpan={3}>
+          <Input
+            value={updatedCard}
+            onChange={(e) => setUpdatedCard(e.target.value)}
+          />
+        </TableCell>
+        <TableCell>
+          <Select
+            onValueChange={(value) => setUpdatedB1(value)}
+            defaultValue={updatedB1}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {users.map(({ id, name }) => (
+                <SelectItem key={id} value={name}>
+                  {name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </TableCell>
+        <TableCell>
+          <Select
+            onValueChange={(value) => setUpdatedB2(value)}
+            defaultValue={updatedB2}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {users.map(({ id, name }) => (
+                <SelectItem key={id} value={name}>
+                  {name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </TableCell>
+        <TableCell>
+          <Button size={"icon"} variant={"ghost"} onClick={updateTicket}>
+            <FaSave />
+          </Button>
+          <Button size={"icon"} variant={"ghost"} onClick={resetUpdatedFields}>
+            <FaArrowLeft />
+          </Button>
+        </TableCell>
+      </TableRow>
+    );
+  }
+
+  return (
+    <TableRow>
+      <TableCell colSpan={3}>{card}</TableCell>
+      <TableCell>{b1}</TableCell>
+      <TableCell>{b2}</TableCell>
+      <TableCell className="flex gap-2" colSpan={1}>
+        <Button size={"icon"} variant={"ghost"} onClick={toggleIsEditing}>
+          <FaPencil />
+        </Button>
+        <Button size={"icon"} variant={"ghost"}>
+          <FaTrash />
+        </Button>
+      </TableCell>
+    </TableRow>
   );
 }

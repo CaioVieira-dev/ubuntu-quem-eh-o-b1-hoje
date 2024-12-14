@@ -14,8 +14,8 @@ export default async function Company({
         {`Quem é o B1 do ${company} hoje?`}
       </h1>
 
-      <LastTimeAsB1Table />
       <ActiveTicketsTable />
+      <LastTimeAsB1Table />
     </div>
   );
 }
