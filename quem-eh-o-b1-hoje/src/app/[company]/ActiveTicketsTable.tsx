@@ -92,6 +92,11 @@ export function ActiveTicketsTable() {
     },
     [],
   );
+  const removeTicket = useCallback((removedIndex: number) => {
+    setActiveTickets((oldTickets) => {
+      return oldTickets.filter((old, index) => removedIndex !== index);
+    });
+  }, []);
 
   useEffect(() => {
     if (form.formState.isSubmitSuccessful) {
@@ -126,6 +131,7 @@ export function ActiveTicketsTable() {
                 b1={b1}
                 b2={b2}
                 update={(updatedTicket) => updateTicket(updatedTicket, index)}
+                remove={() => removeTicket(index)}
               />
             ))}
           </TableBody>
@@ -145,6 +151,7 @@ export function ActiveTicketsTable() {
                           <FormControl>
                             <Input
                               placeholder="Preencha o link do card"
+                              required
                               {...field}
                             ></Input>
                           </FormControl>
@@ -229,12 +236,14 @@ function OpenTicketRow({
   b2,
   users,
   update,
+  remove,
 }: {
   card: string;
   b1?: string;
   b2?: string;
   users: { name: string; id: number }[];
   update: (updatedTicket: { card: string; b1?: string; b2?: string }) => void;
+  remove: () => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [updatedCard, setUpdatedCard] = useState(card);
@@ -242,12 +251,12 @@ function OpenTicketRow({
   const [updatedB2, setUpdatedB2] = useState(b2);
 
   const toggleIsEditing = useCallback(() => setIsEditing((last) => !last), []);
-  const resetUpdatedFields = useCallback(() => {
-    setUpdatedCard("");
-    setUpdatedB1("");
-    setUpdatedB2("");
+  const cancelUpdatedFields = useCallback(() => {
+    setUpdatedCard(card);
+    setUpdatedB1(b1);
+    setUpdatedB2(b2);
     toggleIsEditing();
-  }, [toggleIsEditing]);
+  }, [b1, b2, card, toggleIsEditing]);
   const updateTicket = useCallback(() => {
     if (updatedCard) {
       update({ card: updatedCard, b1: updatedB1, b2: updatedB2 });
@@ -270,7 +279,7 @@ function OpenTicketRow({
             defaultValue={updatedB1}
           >
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue placeholder="Selecione um B1"></SelectValue>
             </SelectTrigger>
             <SelectContent>
               {users.map(({ id, name }) => (
@@ -287,7 +296,7 @@ function OpenTicketRow({
             defaultValue={updatedB2}
           >
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue placeholder="Selecione um B2"></SelectValue>
             </SelectTrigger>
             <SelectContent>
               {users.map(({ id, name }) => (
@@ -302,7 +311,7 @@ function OpenTicketRow({
           <Button size={"icon"} variant={"ghost"} onClick={updateTicket}>
             <FaSave />
           </Button>
-          <Button size={"icon"} variant={"ghost"} onClick={resetUpdatedFields}>
+          <Button size={"icon"} variant={"ghost"} onClick={cancelUpdatedFields}>
             <FaArrowLeft />
           </Button>
         </TableCell>
@@ -319,7 +328,7 @@ function OpenTicketRow({
         <Button size={"icon"} variant={"ghost"} onClick={toggleIsEditing}>
           <FaPencil />
         </Button>
-        <Button size={"icon"} variant={"ghost"}>
+        <Button size={"icon"} variant={"ghost"} onClick={remove}>
           <FaTrash />
         </Button>
       </TableCell>
