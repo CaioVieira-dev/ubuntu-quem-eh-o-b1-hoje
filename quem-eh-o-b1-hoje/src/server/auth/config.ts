@@ -63,5 +63,14 @@ export const authConfig = {
         id: user.id,
       },
     }),
+    async redirect({ baseUrl, url }) {
+      //if we get an callbackUrl we use it
+      if (url) {
+        return url;
+      }
+
+      //else, we go to the base url
+      return baseUrl;
+    },
   },
 } satisfies NextAuthConfig;
