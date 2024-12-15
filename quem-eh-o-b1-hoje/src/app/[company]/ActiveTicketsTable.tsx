@@ -25,6 +25,12 @@ import {
 import { SelectValue } from "@radix-ui/react-select";
 import { Button } from "~/components/ui/button";
 import { useCallback, useEffect, useState } from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "~/components/ui/accordion";
 
 const mockAtendimentosAtivos = [
   {
@@ -107,126 +113,141 @@ export function ActiveTicketsTable() {
   }, [form, form.formState.isSubmitSuccessful]);
 
   return (
-    <>
-      <h3 className="flex gap-2 text-xl font-extrabold tracking-tight sm:text-[2rem]">
-        <FaArrowDown />
-        Chamados em aberto <FaArrowDown />
-      </h3>
-      <div className="">
-        <Table className="table-fixed">
-          <TableHeader>
-            <TableRow>
-              <TableHead colSpan={3}>Card</TableHead>
-              <TableHead>B1</TableHead>
-              <TableHead>B2</TableHead>
-              <TableHead>Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {activeTickets.map(({ b1, b2, card }, index) => (
-              <OpenTicketRow
-                key={`${card}-${index}`}
-                card={card}
-                users={users}
-                b1={b1}
-                b2={b2}
-                update={(updatedTicket) => updateTicket(updatedTicket, index)}
-                remove={() => removeTicket(index)}
-              />
-            ))}
-          </TableBody>
-        </Table>
-        {/* new ticket form */}
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(addNewTicket)}>
+    <Accordion
+      type="single"
+      collapsible
+      className="w-full"
+      defaultValue="item-1"
+    >
+      <AccordionItem value="item-1">
+        <AccordionTrigger>
+          <h3 className="flex w-full justify-center gap-2 text-xl font-extrabold tracking-tight sm:text-[2rem]">
+            Chamados em aberto
+          </h3>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="">
             <Table className="table-fixed">
-              <TableBody>
-                <TableRow key={"new-ticket"} className="hover:bg-transparent">
-                  <TableCell colSpan={3}>
-                    <FormField
-                      name="card"
-                      control={form.control}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Input
-                              placeholder="Preencha o link do card"
-                              required
-                              {...field}
-                            ></Input>
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    ></FormField>
-                  </TableCell>
-                  <TableCell>
-                    <FormField
-                      name="b1"
-                      control={form.control}
-                      render={({ field }) => (
-                        <FormItem>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            key={`b2${selectKey}`}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione um B1"></SelectValue>
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {users.map(({ id, name }) => (
-                                <SelectItem key={id} value={name}>
-                                  {name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormItem>
-                      )}
-                    ></FormField>
-                  </TableCell>
-                  <TableCell>
-                    <FormField
-                      name="b2"
-                      control={form.control}
-                      render={({ field }) => (
-                        <FormItem>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            key={`b2${selectKey}`}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione um B2"></SelectValue>
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {users.map(({ id, name }) => (
-                                <SelectItem key={id} value={name}>
-                                  {name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormItem>
-                      )}
-                    ></FormField>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant={"secondary"} type="submit">
-                      Adicionar
-                    </Button>
-                  </TableCell>
+              <TableHeader>
+                <TableRow>
+                  <TableHead colSpan={3}>Card</TableHead>
+                  <TableHead>B1</TableHead>
+                  <TableHead>B2</TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
+              </TableHeader>
+              <TableBody>
+                {activeTickets.map(({ b1, b2, card }, index) => (
+                  <OpenTicketRow
+                    key={`${card}-${index}`}
+                    card={card}
+                    users={users}
+                    b1={b1}
+                    b2={b2}
+                    update={(updatedTicket) =>
+                      updateTicket(updatedTicket, index)
+                    }
+                    remove={() => removeTicket(index)}
+                  />
+                ))}
               </TableBody>
             </Table>
-          </form>
-        </Form>
-      </div>
-    </>
+            {/* new ticket form */}
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(addNewTicket)}>
+                <Table className="table-fixed">
+                  <TableBody>
+                    <TableRow
+                      key={"new-ticket"}
+                      className="hover:bg-transparent"
+                    >
+                      <TableCell colSpan={3}>
+                        <FormField
+                          name="card"
+                          control={form.control}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input
+                                  placeholder="Preencha o link do card"
+                                  required
+                                  {...field}
+                                ></Input>
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        ></FormField>
+                      </TableCell>
+                      <TableCell>
+                        <FormField
+                          name="b1"
+                          control={form.control}
+                          render={({ field }) => (
+                            <FormItem>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                key={`b2${selectKey}`}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione um B1"></SelectValue>
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {users.map(({ id, name }) => (
+                                    <SelectItem key={id} value={name}>
+                                      {name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormItem>
+                          )}
+                        ></FormField>
+                      </TableCell>
+                      <TableCell>
+                        <FormField
+                          name="b2"
+                          control={form.control}
+                          render={({ field }) => (
+                            <FormItem>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                key={`b2${selectKey}`}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione um B2"></SelectValue>
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {users.map(({ id, name }) => (
+                                    <SelectItem key={id} value={name}>
+                                      {name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormItem>
+                          )}
+                        ></FormField>
+                      </TableCell>
+                      <TableCell>
+                        <Button variant={"secondary"} type="submit">
+                          Adicionar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </form>
+            </Form>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 }
 
