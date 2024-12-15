@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { FaArrowDown, FaArrowLeft, FaPencil, FaTrash } from "react-icons/fa6";
+import { FaArrowLeft, FaPencil, FaTrash } from "react-icons/fa6";
 import { FaSave } from "react-icons/fa";
 import { Form, FormControl, FormField, FormItem } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
@@ -31,6 +31,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "~/components/ui/accordion";
+import { api } from "~/trpc/react";
 
 const mockAtendimentosAtivos = [
   {
@@ -80,11 +81,27 @@ export function ActiveTicketsTable() {
     },
   });
 
-  const addNewTicket = useCallback((newTicket: z.infer<typeof formSchema>) => {
-    setActiveTickets((oldTickets) => {
-      return [...oldTickets, newTicket];
-    });
-  }, []);
+  const { mutate: createTicket } = api.ticket.create.useMutation({
+    onSuccess(data) {
+      const { card, b1, b2 } = data[0] as {
+        card: string;
+        b1?: string;
+        b2?: string;
+      };
+
+      setActiveTickets((oldTickets) => {
+        return [...oldTickets, { card, b1, b2 }];
+      });
+    },
+  });
+
+  const addNewTicket = useCallback(
+    (newTicket: z.infer<typeof formSchema>) => {
+      return createTicket(newTicket);
+    },
+    [createTicket],
+  );
+
   const updateTicket = useCallback(
     (
       newTicket: { card: string; b1?: string; b2?: string },

@@ -16,7 +16,9 @@ import { type AdapterAccount } from "next-auth/adapters";
  *
  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
  */
-export const createTable = pgTableCreator((name) => `quem-eh-o-b1-hoje_${name}`);
+export const createTable = pgTableCreator(
+  (name) => `quem-eh-o-b1-hoje_${name}`,
+);
 
 export const posts = createTable(
   "post",
@@ -30,13 +32,13 @@ export const posts = createTable(
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-      () => new Date()
+      () => new Date(),
     ),
   },
   (example) => ({
     createdByIdIdx: index("created_by_idx").on(example.createdById),
     nameIndex: index("name_idx").on(example.name),
-  })
+  }),
 );
 
 export const users = createTable("user", {
@@ -83,7 +85,7 @@ export const accounts = createTable(
       columns: [account.provider, account.providerAccountId],
     }),
     userIdIdx: index("account_user_id_idx").on(account.userId),
-  })
+  }),
 );
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -106,7 +108,7 @@ export const sessions = createTable(
   },
   (session) => ({
     userIdIdx: index("session_user_id_idx").on(session.userId),
-  })
+  }),
 );
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -125,5 +127,38 @@ export const verificationTokens = createTable(
   },
   (vt) => ({
     compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
-  })
+  }),
+);
+
+export const tickets = createTable(
+  "ticket",
+  {
+    id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
+    card: varchar("card", { length: 256 }).notNull(),
+    createdById: varchar("created_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    b1: varchar("b1", { length: 255 }).references(() => users.id),
+    b1UpdatedAt: timestamp("b1_updated_at", { withTimezone: true }),
+    b2: varchar("b2", { length: 255 }).references(() => users.id),
+    b2UpdatedAt: timestamp("b2_updated_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+      () => new Date(),
+    ),
+  },
+  (ticket) => ({
+    createdByIdIdx: index("ticket_created_by_idx").on(ticket.createdById),
+    cardIndex: index("ticket_card_idx").on(ticket.card),
+    b1AndB1UpdatedAtIndex: index("ticket_b1_and_b1_updated_at_idx").on(
+      ticket.b1,
+      ticket.b1UpdatedAt,
+    ),
+    b2AndB2UpdatedAtIndex: index("ticket_b2_and_b2_updated_at_idx").on(
+      ticket.b2,
+      ticket.b2UpdatedAt,
+    ),
+  }),
 );

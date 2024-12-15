@@ -38,7 +38,7 @@ export function LastTimeAsB1Table() {
       <AccordionItem value="item-1">
         <AccordionTrigger>
           <h3 className="flex w-full justify-center gap-2 text-xl font-extrabold tracking-tight sm:text-[2rem]">
-            Historico
+            Ultima vez como b1
           </h3>
         </AccordionTrigger>
         <AccordionContent>
