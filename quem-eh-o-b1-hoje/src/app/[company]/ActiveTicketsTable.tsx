@@ -33,46 +33,25 @@ import {
 } from "~/components/ui/accordion";
 import { api } from "~/trpc/react";
 
-const mockAtendimentosAtivos = [
-  {
-    card: "https://app.clickup.com/t/86a5jxutr",
-    b1: "caio",
-    b2: "ramon",
-    id: 1,
-  },
-  {
-    card: "https://app.clickup.com/t/12a5jxutz",
-    b1: "heitor",
-    b2: "caio",
-    id: 2,
-  },
-  {
-    card: "https://app.clickup.com/t/99a5jxutz",
-    b1: "camila",
-    b2: "heitor",
-    id: 3,
-  },
-];
-
-const mockUsuarios = [
-  { name: "caio", id: 1 },
-  { name: "ramon", id: 2 },
-  { name: "heitor", id: 3 },
-  { name: "camila", id: 4 },
-];
-
 const formSchema = z.object({
   card: z.string(),
-  b1: z.string().optional(),
-  b2: z.string().optional(),
+  b1: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => (v === "null" ? null : v)),
+  b2: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => (v === "null" ? null : v)),
 });
 
 export function ActiveTicketsTable() {
   const [selectKey, setSelectKey] = useState(+new Date());
-  const [activeTickets, setActiveTickets] = useState<
-    z.infer<typeof formSchema>[]
-  >(mockAtendimentosAtivos);
-  const [users, setUsers] = useState(mockUsuarios);
+  const utils = api.useUtils();
+  const [activeTickets] = api.ticket.getCompanyTickets.useSuspenseQuery();
+  const [users] = api.user.getUsers.useSuspenseQuery();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -82,16 +61,18 @@ export function ActiveTicketsTable() {
   });
 
   const { mutate: createTicket } = api.ticket.create.useMutation({
-    onSuccess(data) {
-      const { card, b1, b2 } = data[0] as {
-        card: string;
-        b1?: string;
-        b2?: string;
-      };
-
-      setActiveTickets((oldTickets) => {
-        return [...oldTickets, { card, b1, b2 }];
-      });
+    onSuccess() {
+      return utils.ticket.invalidate();
+    },
+  });
+  const { mutate: update } = api.ticket.update.useMutation({
+    onSuccess() {
+      return utils.ticket.invalidate();
+    },
+  });
+  const { mutate: deleteTicket } = api.ticket.remove.useMutation({
+    onSuccess() {
+      return utils.ticket.invalidate();
     },
   });
 
@@ -104,22 +85,44 @@ export function ActiveTicketsTable() {
 
   const updateTicket = useCallback(
     (
-      newTicket: { card: string; b1?: string; b2?: string },
-      updatedIndex: number,
+      newTicket: {
+        card: string;
+        b1?: string | null | undefined;
+        b2?: string | null | undefined;
+      },
+      updatedTicketId: number,
     ) => {
-      setActiveTickets((oldTickets) => {
-        return oldTickets.map((old, index) =>
-          updatedIndex === index ? { ...old, ...newTicket } : old,
-        );
-      });
+      const oldTicket = activeTickets.find(
+        ({ ticketId }) => ticketId === updatedTicketId,
+      );
+      if (oldTicket) {
+        const { card, b1, b2 } = newTicket;
+        const updatedTicket: {
+          card: string;
+          b1?: string | null | undefined;
+          b2?: string | null | undefined;
+        } = {
+          card,
+        };
+
+        if (b1 !== oldTicket?.b1?.id) {
+          updatedTicket.b1 = b1 === "null" ? null : b1;
+        }
+        if (b2 !== oldTicket?.b2?.id) {
+          updatedTicket.b2 = b1 === "null" ? null : b2;
+        }
+
+        update({ ...updatedTicket, ticketId: updatedTicketId });
+      }
     },
-    [],
+    [activeTickets, update],
   );
-  const removeTicket = useCallback((removedIndex: number) => {
-    setActiveTickets((oldTickets) => {
-      return oldTickets.filter((old, index) => removedIndex !== index);
-    });
-  }, []);
+  const removeTicket = useCallback(
+    (ticketId: number) => {
+      deleteTicket({ ticketId });
+    },
+    [deleteTicket],
+  );
 
   useEffect(() => {
     if (form.formState.isSubmitSuccessful) {
@@ -154,17 +157,17 @@ export function ActiveTicketsTable() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {activeTickets.map(({ b1, b2, card }, index) => (
+                {activeTickets?.map(({ b1, b2, card, ticketId }) => (
                   <OpenTicketRow
-                    key={`${card}-${index}`}
+                    key={`${card}-${ticketId}`}
                     card={card}
                     users={users}
                     b1={b1}
                     b2={b2}
                     update={(updatedTicket) =>
-                      updateTicket(updatedTicket, index)
+                      updateTicket(updatedTicket, ticketId)
                     }
-                    remove={() => removeTicket(index)}
+                    remove={() => removeTicket(ticketId)}
                   />
                 ))}
               </TableBody>
@@ -203,7 +206,7 @@ export function ActiveTicketsTable() {
                             <FormItem>
                               <Select
                                 onValueChange={field.onChange}
-                                defaultValue={field.value}
+                                defaultValue={field.value ?? ""}
                                 key={`b2${selectKey}`}
                               >
                                 <FormControl>
@@ -212,8 +215,12 @@ export function ActiveTicketsTable() {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
+                                  <SelectItem key={-1} value={"null"}>
+                                    <span className="w-100 p-3"></span>
+                                  </SelectItem>
+
                                   {users.map(({ id, name }) => (
-                                    <SelectItem key={id} value={name}>
+                                    <SelectItem key={id} value={id}>
                                       {name}
                                     </SelectItem>
                                   ))}
@@ -231,7 +238,7 @@ export function ActiveTicketsTable() {
                             <FormItem>
                               <Select
                                 onValueChange={field.onChange}
-                                defaultValue={field.value}
+                                defaultValue={field.value ?? ""}
                                 key={`b2${selectKey}`}
                               >
                                 <FormControl>
@@ -240,8 +247,11 @@ export function ActiveTicketsTable() {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
+                                  <SelectItem key={-1} value={"null"}>
+                                    <span className="w-100 p-3"></span>
+                                  </SelectItem>
                                   {users.map(({ id, name }) => (
-                                    <SelectItem key={id} value={name}>
+                                    <SelectItem key={id} value={id}>
                                       {name}
                                     </SelectItem>
                                   ))}
@@ -277,22 +287,26 @@ function OpenTicketRow({
   remove,
 }: {
   card: string;
-  b1?: string;
-  b2?: string;
-  users: { name: string; id: number }[];
-  update: (updatedTicket: { card: string; b1?: string; b2?: string }) => void;
+  b1?: { name: string | null | undefined; id: string | null };
+  b2?: { name: string | null | undefined; id: string | null };
+  users: { name: string; id: string }[];
+  update: (updatedTicket: {
+    card: string;
+    b1?: string | null | undefined;
+    b2?: string | null | undefined;
+  }) => void;
   remove: () => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [updatedCard, setUpdatedCard] = useState(card);
-  const [updatedB1, setUpdatedB1] = useState(b1);
-  const [updatedB2, setUpdatedB2] = useState(b2);
+  const [updatedB1, setUpdatedB1] = useState(b1?.id);
+  const [updatedB2, setUpdatedB2] = useState(b2?.id);
 
   const toggleIsEditing = useCallback(() => setIsEditing((last) => !last), []);
   const cancelUpdatedFields = useCallback(() => {
     setUpdatedCard(card);
-    setUpdatedB1(b1);
-    setUpdatedB2(b2);
+    setUpdatedB1(b1?.id);
+    setUpdatedB2(b2?.id);
     toggleIsEditing();
   }, [b1, b2, card, toggleIsEditing]);
   const updateTicket = useCallback(() => {
@@ -314,14 +328,17 @@ function OpenTicketRow({
         <TableCell>
           <Select
             onValueChange={(value) => setUpdatedB1(value)}
-            defaultValue={updatedB1}
+            defaultValue={updatedB1 ?? ""}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecione um B1"></SelectValue>
             </SelectTrigger>
             <SelectContent>
+              <SelectItem key={-1} value={"null"}>
+                <span className="w-100 p-3"></span>
+              </SelectItem>
               {users.map(({ id, name }) => (
-                <SelectItem key={id} value={name}>
+                <SelectItem key={id} value={id}>
                   {name}
                 </SelectItem>
               ))}
@@ -331,14 +348,18 @@ function OpenTicketRow({
         <TableCell>
           <Select
             onValueChange={(value) => setUpdatedB2(value)}
-            defaultValue={updatedB2}
+            defaultValue={updatedB2 ?? ""}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecione um B2"></SelectValue>
             </SelectTrigger>
             <SelectContent>
+              <SelectItem key={-1} value={"null"}>
+                <span className="w-100 p-3"></span>
+              </SelectItem>
+
               {users.map(({ id, name }) => (
-                <SelectItem key={id} value={name}>
+                <SelectItem key={id} value={id}>
                   {name}
                 </SelectItem>
               ))}
@@ -360,8 +381,8 @@ function OpenTicketRow({
   return (
     <TableRow>
       <TableCell colSpan={3}>{card}</TableCell>
-      <TableCell>{b1}</TableCell>
-      <TableCell>{b2}</TableCell>
+      <TableCell>{b1?.name}</TableCell>
+      <TableCell>{b2?.name}</TableCell>
       <TableCell className="flex gap-2" colSpan={1}>
         <Button size={"icon"} variant={"ghost"} onClick={toggleIsEditing}>
           <FaPencil />

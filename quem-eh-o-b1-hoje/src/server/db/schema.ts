@@ -148,6 +148,7 @@ export const tickets = createTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
       () => new Date(),
     ),
+    company: varchar("company", { length: 256 }).notNull(),
   },
   (ticket) => ({
     createdByIdIdx: index("ticket_created_by_idx").on(ticket.createdById),
@@ -160,5 +161,6 @@ export const tickets = createTable(
       ticket.b2,
       ticket.b2UpdatedAt,
     ),
+    companyIndex: index("ticket_company_idx").on(ticket.company),
   }),
 );
