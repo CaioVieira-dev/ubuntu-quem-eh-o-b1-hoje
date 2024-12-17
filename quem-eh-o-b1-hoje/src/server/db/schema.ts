@@ -57,6 +57,9 @@ export const users = createTable("user", {
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
+  b1In: many(tickets, { relationName: "b1Id" }),
+  b2In: many(tickets, { relationName: "b2Id" }),
+  createdTickets: many(tickets, { relationName: "createdBy" }),
 }));
 
 export const accounts = createTable(
@@ -138,9 +141,9 @@ export const tickets = createTable(
     createdById: varchar("created_by", { length: 255 })
       .notNull()
       .references(() => users.id),
-    b1: varchar("b1", { length: 255 }).references(() => users.id),
+    b1Id: varchar("b1Id", { length: 255 }).references(() => users.id),
     b1UpdatedAt: timestamp("b1_updated_at", { withTimezone: true }),
-    b2: varchar("b2", { length: 255 }).references(() => users.id),
+    b2Id: varchar("b2Id", { length: 255 }).references(() => users.id),
     b2UpdatedAt: timestamp("b2_updated_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
@@ -154,13 +157,31 @@ export const tickets = createTable(
     createdByIdIdx: index("ticket_created_by_idx").on(ticket.createdById),
     cardIndex: index("ticket_card_idx").on(ticket.card),
     b1AndB1UpdatedAtIndex: index("ticket_b1_and_b1_updated_at_idx").on(
-      ticket.b1,
+      ticket.b1Id,
       ticket.b1UpdatedAt,
     ),
     b2AndB2UpdatedAtIndex: index("ticket_b2_and_b2_updated_at_idx").on(
-      ticket.b2,
+      ticket.b2Id,
       ticket.b2UpdatedAt,
     ),
     companyIndex: index("ticket_company_idx").on(ticket.company),
   }),
 );
+
+export const ticketsRelations = relations(tickets, ({ one }) => ({
+  createdBy: one(users, {
+    fields: [tickets.createdById],
+    references: [users.id],
+    relationName: "createdBy",
+  }),
+  b1: one(users, {
+    fields: [tickets.b1Id],
+    references: [users.id],
+    relationName: "b1Id",
+  }),
+  b2: one(users, {
+    fields: [tickets.b2Id],
+    references: [users.id],
+    relationName: "b2Id",
+  }),
+}));

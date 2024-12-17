@@ -6,8 +6,8 @@ import { tickets, users } from "~/server/db/schema";
 
 const createTicketSchema = z.object({
   card: z.string(),
-  b1: z.string().optional().nullable(),
-  b2: z.string().optional().nullable(),
+  b1Id: z.string().optional().nullable(),
+  b2Id: z.string().optional().nullable(),
 });
 const updateTicketSchema = createTicketSchema.and(
   z.object({ ticketId: z.number() }),
@@ -21,7 +21,7 @@ export const ticketRouter = createTRPCRouter({
   create: protectedProcedure
     .input(createTicketSchema)
     .mutation(async ({ ctx, input }) => {
-      const { card, b1, b2 } = input;
+      const { card, b1Id, b2Id } = input;
 
       const newTicket: createTicketType & {
         b1UpdatedAt?: Date;
@@ -34,13 +34,12 @@ export const ticketRouter = createTRPCRouter({
         company: COMPANY,
       };
 
-      if (b1) {
-        newTicket.b1 = ctx.session.user.id;
-        // newTicket.b1 = b1;
+      newTicket.b1Id = b1Id;
+      if (b1Id) {
         newTicket.b1UpdatedAt = new Date();
       }
-      if (b2) {
-        newTicket.b2 = b1;
+      newTicket.b2Id = b2Id;
+      if (b2Id) {
         newTicket.b2UpdatedAt = new Date();
       }
 
@@ -50,7 +49,7 @@ export const ticketRouter = createTRPCRouter({
     .input(updateTicketSchema)
     .mutation(async ({ ctx, input }) => {
       console.log(input);
-      const { card, b1, b2, ticketId } = input;
+      const { card, b1Id, b2Id, ticketId } = input;
       const oldTicket = await ctx.db.query.tickets.findFirst({
         where: ({ id }, { eq }) => eq(id, ticketId),
       });
@@ -66,12 +65,12 @@ export const ticketRouter = createTRPCRouter({
         company: COMPANY,
       };
 
-      if (oldTicket?.b1 !== b1) {
-        newTicket.b1 = b1;
+      if (oldTicket?.b1Id !== b1Id) {
+        newTicket.b1Id = b1Id;
         newTicket.b1UpdatedAt = new Date();
       }
-      if (oldTicket?.b2 !== b2) {
-        newTicket.b2 = b2;
+      if (oldTicket?.b2Id !== b2Id) {
+        newTicket.b2Id = b2Id;
         newTicket.b2UpdatedAt = new Date();
       }
 
@@ -100,17 +99,17 @@ export const ticketRouter = createTRPCRouter({
       })
       .from(tickets)
       .where(eq(tickets.company, COMPANY))
-      .leftJoin(b1User, eq(b1User.id, tickets.b1))
-      .leftJoin(b2User, eq(b2User.id, tickets.b2));
+      .leftJoin(b1User, eq(b1User.id, tickets.b1Id))
+      .leftJoin(b2User, eq(b2User.id, tickets.b2Id));
 
     return companyTickets.map(({ b1User, b2User, tickets }) => {
-      const { card, id, b1, b2 } = tickets;
+      const { card, id, b1Id, b2Id } = tickets;
       const { name: b1Name } = b1User ?? {};
       const { name: b2Name } = b2User ?? {};
 
       return {
-        b1: { name: b1Name, id: b1 },
-        b2: { name: b2Name, id: b2 },
+        b1: { name: b1Name, id: b1Id },
+        b2: { name: b2Name, id: b2Id },
         card,
         ticketId: id,
       };

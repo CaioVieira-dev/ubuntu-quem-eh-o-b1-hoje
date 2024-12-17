@@ -35,12 +35,12 @@ import { api } from "~/trpc/react";
 
 const formSchema = z.object({
   card: z.string(),
-  b1: z
+  b1Id: z
     .string()
     .optional()
     .nullable()
     .transform((v) => (v === "null" ? null : v)),
-  b2: z
+  b2Id: z
     .string()
     .optional()
     .nullable()
@@ -87,8 +87,8 @@ export function ActiveTicketsTable() {
     (
       newTicket: {
         card: string;
-        b1?: string | null | undefined;
-        b2?: string | null | undefined;
+        b1Id?: string | null | undefined;
+        b2Id?: string | null | undefined;
       },
       updatedTicketId: number,
     ) => {
@@ -96,20 +96,20 @@ export function ActiveTicketsTable() {
         ({ ticketId }) => ticketId === updatedTicketId,
       );
       if (oldTicket) {
-        const { card, b1, b2 } = newTicket;
+        const { card, b1Id, b2Id } = newTicket;
         const updatedTicket: {
           card: string;
-          b1?: string | null | undefined;
-          b2?: string | null | undefined;
+          b1Id?: string | null | undefined;
+          b2Id?: string | null | undefined;
         } = {
           card,
         };
 
-        if (b1 !== oldTicket?.b1?.id) {
-          updatedTicket.b1 = b1 === "null" ? null : b1;
+        if (b1Id !== oldTicket?.b1?.id) {
+          updatedTicket.b1Id = b1Id === "null" ? null : b1Id;
         }
-        if (b2 !== oldTicket?.b2?.id) {
-          updatedTicket.b2 = b1 === "null" ? null : b2;
+        if (b2Id !== oldTicket?.b2?.id) {
+          updatedTicket.b2Id = b1Id === "null" ? null : b2Id;
         }
 
         update({ ...updatedTicket, ticketId: updatedTicketId });
@@ -151,8 +151,8 @@ export function ActiveTicketsTable() {
               <TableHeader>
                 <TableRow>
                   <TableHead colSpan={3}>Card</TableHead>
-                  <TableHead>B1</TableHead>
-                  <TableHead>B2</TableHead>
+                  <TableHead>b1</TableHead>
+                  <TableHead>b2</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -200,18 +200,18 @@ export function ActiveTicketsTable() {
                       </TableCell>
                       <TableCell>
                         <FormField
-                          name="b1"
+                          name="b1Id"
                           control={form.control}
                           render={({ field }) => (
                             <FormItem>
                               <Select
                                 onValueChange={field.onChange}
                                 defaultValue={field.value ?? ""}
-                                key={`b2${selectKey}`}
+                                key={`b2Id${selectKey}`}
                               >
                                 <FormControl>
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Selecione um B1"></SelectValue>
+                                    <SelectValue placeholder="Selecione um b1"></SelectValue>
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
@@ -232,18 +232,18 @@ export function ActiveTicketsTable() {
                       </TableCell>
                       <TableCell>
                         <FormField
-                          name="b2"
+                          name="b2Id"
                           control={form.control}
                           render={({ field }) => (
                             <FormItem>
                               <Select
                                 onValueChange={field.onChange}
                                 defaultValue={field.value ?? ""}
-                                key={`b2${selectKey}`}
+                                key={`b2Id${selectKey}`}
                               >
                                 <FormControl>
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Selecione um B2"></SelectValue>
+                                    <SelectValue placeholder="Selecione um b2"></SelectValue>
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
@@ -292,29 +292,29 @@ function OpenTicketRow({
   users: { name: string; id: string }[];
   update: (updatedTicket: {
     card: string;
-    b1?: string | null | undefined;
-    b2?: string | null | undefined;
+    b1Id?: string | null | undefined;
+    b2Id?: string | null | undefined;
   }) => void;
   remove: () => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [updatedCard, setUpdatedCard] = useState(card);
-  const [updatedB1, setUpdatedB1] = useState(b1?.id);
-  const [updatedB2, setUpdatedB2] = useState(b2?.id);
+  const [updatedb1, setUpdatedb1] = useState(b1?.id);
+  const [updatedb2, setUpdatedb2] = useState(b2?.id);
 
   const toggleIsEditing = useCallback(() => setIsEditing((last) => !last), []);
   const cancelUpdatedFields = useCallback(() => {
     setUpdatedCard(card);
-    setUpdatedB1(b1?.id);
-    setUpdatedB2(b2?.id);
+    setUpdatedb1(b1?.id);
+    setUpdatedb2(b2?.id);
     toggleIsEditing();
   }, [b1, b2, card, toggleIsEditing]);
   const updateTicket = useCallback(() => {
     if (updatedCard) {
-      update({ card: updatedCard, b1: updatedB1, b2: updatedB2 });
+      update({ card: updatedCard, b1Id: updatedb1, b2Id: updatedb2 });
       toggleIsEditing();
     }
-  }, [toggleIsEditing, update, updatedB1, updatedB2, updatedCard]);
+  }, [toggleIsEditing, update, updatedb1, updatedb2, updatedCard]);
 
   if (isEditing) {
     return (
@@ -327,11 +327,11 @@ function OpenTicketRow({
         </TableCell>
         <TableCell>
           <Select
-            onValueChange={(value) => setUpdatedB1(value)}
-            defaultValue={updatedB1 ?? ""}
+            onValueChange={(value) => setUpdatedb1(value)}
+            defaultValue={updatedb1 ?? ""}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione um B1"></SelectValue>
+              <SelectValue placeholder="Selecione um b1"></SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem key={-1} value={"null"}>
@@ -347,11 +347,11 @@ function OpenTicketRow({
         </TableCell>
         <TableCell>
           <Select
-            onValueChange={(value) => setUpdatedB2(value)}
-            defaultValue={updatedB2 ?? ""}
+            onValueChange={(value) => setUpdatedb2(value)}
+            defaultValue={updatedb2 ?? ""}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione um B2"></SelectValue>
+              <SelectValue placeholder="Selecione um b2"></SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem key={-1} value={"null"}>
