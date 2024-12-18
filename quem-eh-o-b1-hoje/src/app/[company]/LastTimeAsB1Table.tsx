@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Table,
   TableBody,
@@ -12,27 +14,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "~/components/ui/accordion";
-
-const ultimaVezComoB1EB2 = [
-  {
-    name: "caio",
-    lastTimeAsB1: "2024-12-01T15:00:20.000Z",
-    lastTimeAsB2: "2024-11-28T15:00:20.000Z",
-    id: 1,
-  },
-  {
-    name: "ramon",
-    lastTimeAsB2: "2024-11-28T15:00:20.000Z",
-    id: 2,
-  },
-  {
-    name: "heitor",
-    lastTimeAsB1: "2024-12-01T15:00:20.000Z",
-    id: 3,
-  },
-];
+import { api } from "~/trpc/react";
 
 export function LastTimeAsB1Table() {
+  const [lastTimeOfUsersAsB1OrB2] =
+    api.user.getLastTimeInTicketAsB1AndB2.useSuspenseQuery();
+
   return (
     <Accordion type="single" collapsible className="w-full">
       <AccordionItem value="item-1">
@@ -51,7 +38,7 @@ export function LastTimeAsB1Table() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {ultimaVezComoB1EB2.map(
+              {lastTimeOfUsersAsB1OrB2?.map?.(
                 ({ id, lastTimeAsB1, lastTimeAsB2, name }) => (
                   <TableRow key={id}>
                     <TableCell>AV </TableCell>
