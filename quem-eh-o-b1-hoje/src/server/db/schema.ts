@@ -1,5 +1,6 @@
 import { relations, sql } from "drizzle-orm";
 import {
+  boolean,
   index,
   integer,
   pgTableCreator,
@@ -152,6 +153,7 @@ export const tickets = createTable(
       () => new Date(),
     ),
     company: varchar("company", { length: 256 }).notNull(),
+    isClosed: boolean("is_closed").default(false),
   },
   (ticket) => ({
     createdByIdIdx: index("ticket_created_by_idx").on(ticket.createdById),

@@ -1,4 +1,4 @@
-import { aliasedTable, eq } from "drizzle-orm";
+import { aliasedTable, and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
@@ -79,6 +79,22 @@ export const ticketRouter = createTRPCRouter({
         .set(newTicket)
         .where(eq(tickets.id, ticketId));
     }),
+  closeTicket: protectedProcedure
+    .input(z.object({ ticketId: z.number() }))
+    .mutation(({ ctx, input }) => {
+      return ctx.db
+        .update(tickets)
+        .set({ isClosed: true })
+        .where(eq(tickets.id, input.ticketId));
+    }),
+  reopenTicket: protectedProcedure
+    .input(z.object({ ticketId: z.number() }))
+    .mutation(({ ctx, input }) => {
+      return ctx.db
+        .update(tickets)
+        .set({ isClosed: false })
+        .where(eq(tickets.id, input.ticketId));
+    }),
   remove: protectedProcedure
     .input(z.object({ ticketId: z.number() }))
     .mutation(async ({ ctx, input }) => {
@@ -87,32 +103,37 @@ export const ticketRouter = createTRPCRouter({
       return ctx.db.delete(tickets).where(eq(tickets.id, ticketId));
     }),
 
-  getCompanyTickets: protectedProcedure.query(async ({ ctx }) => {
-    const b1User = aliasedTable(users, "b1User");
-    const b2User = aliasedTable(users, "b2User");
+  getCompanyTickets: protectedProcedure
+    .input(z.object({ isClosed: z.boolean() }))
+    .query(async ({ ctx, input }) => {
+      const { isClosed } = input;
+      const b1User = aliasedTable(users, "b1User");
+      const b2User = aliasedTable(users, "b2User");
 
-    const companyTickets = await ctx.db
-      .select({
-        b1User,
-        b2User,
-        tickets,
-      })
-      .from(tickets)
-      .where(eq(tickets.company, COMPANY))
-      .leftJoin(b1User, eq(b1User.id, tickets.b1Id))
-      .leftJoin(b2User, eq(b2User.id, tickets.b2Id));
+      const companyTickets = await ctx.db
+        .select({
+          b1User,
+          b2User,
+          tickets,
+        })
+        .from(tickets)
+        .where(
+          and(eq(tickets.company, COMPANY), eq(tickets.isClosed, isClosed)),
+        )
+        .leftJoin(b1User, eq(b1User.id, tickets.b1Id))
+        .leftJoin(b2User, eq(b2User.id, tickets.b2Id));
 
-    return companyTickets.map(({ b1User, b2User, tickets }) => {
-      const { card, id, b1Id, b2Id } = tickets;
-      const { name: b1Name } = b1User ?? {};
-      const { name: b2Name } = b2User ?? {};
+      return companyTickets.map(({ b1User, b2User, tickets }) => {
+        const { card, id, b1Id, b2Id } = tickets;
+        const { name: b1Name } = b1User ?? {};
+        const { name: b2Name } = b2User ?? {};
 
-      return {
-        b1: { name: b1Name, id: b1Id },
-        b2: { name: b2Name, id: b2Id },
-        card,
-        ticketId: id,
-      };
-    });
-  }),
+        return {
+          b1: { name: b1Name, id: b1Id },
+          b2: { name: b2Name, id: b2Id },
+          card,
+          ticketId: id,
+        };
+      });
+    }),
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { FaArrowLeft, FaPencil, FaTrash } from "react-icons/fa6";
+import { FaArrowLeft, FaCheckDouble, FaPencil, FaTrash } from "react-icons/fa6";
 import { FaSave } from "react-icons/fa";
 import { Form, FormControl, FormField, FormItem } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
@@ -50,7 +50,9 @@ const formSchema = z.object({
 export function ActiveTicketsTable() {
   const [selectKey, setSelectKey] = useState(+new Date());
   const utils = api.useUtils();
-  const [activeTickets] = api.ticket.getCompanyTickets.useSuspenseQuery();
+  const [activeTickets] = api.ticket.getCompanyTickets.useSuspenseQuery({
+    isClosed: false,
+  });
   const [users] = api.user.getUsers.useSuspenseQuery();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -66,6 +68,11 @@ export function ActiveTicketsTable() {
     },
   });
   const { mutate: update } = api.ticket.update.useMutation({
+    onSuccess() {
+      return utils.ticket.invalidate();
+    },
+  });
+  const { mutate: closeTicketMutation } = api.ticket.closeTicket.useMutation({
     onSuccess() {
       return utils.ticket.invalidate();
     },
@@ -117,6 +124,10 @@ export function ActiveTicketsTable() {
     },
     [activeTickets, update],
   );
+  const closeTicket = useCallback(
+    (ticketId: number) => closeTicketMutation({ ticketId }),
+    [closeTicketMutation],
+  );
   const removeTicket = useCallback(
     (ticketId: number) => {
       deleteTicket({ ticketId });
@@ -167,6 +178,7 @@ export function ActiveTicketsTable() {
                     update={(updatedTicket) =>
                       updateTicket(updatedTicket, ticketId)
                     }
+                    closeTicket={() => closeTicket(ticketId)}
                     remove={() => removeTicket(ticketId)}
                   />
                 ))}
@@ -284,6 +296,7 @@ function OpenTicketRow({
   b2,
   users,
   update,
+  closeTicket,
   remove,
 }: {
   card: string;
@@ -295,6 +308,7 @@ function OpenTicketRow({
     b1Id?: string | null | undefined;
     b2Id?: string | null | undefined;
   }) => void;
+  closeTicket: () => void;
   remove: () => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -386,6 +400,9 @@ function OpenTicketRow({
       <TableCell className="flex gap-2" colSpan={1}>
         <Button size={"icon"} variant={"ghost"} onClick={toggleIsEditing}>
           <FaPencil />
+        </Button>
+        <Button size={"icon"} variant={"ghost"} onClick={closeTicket}>
+          <FaCheckDouble />
         </Button>
         <Button size={"icon"} variant={"ghost"} onClick={remove}>
           <FaTrash />
