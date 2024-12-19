@@ -1,5 +1,6 @@
 import { LastTimeAsB1Table } from "./LastTimeAsB1Table";
 import { ActiveTicketsTable } from "./ActiveTicketsTable";
+import { ClosedTicketsTable } from "./ClosedTicketsTable";
 
 export default async function Company({
   params,
@@ -16,6 +17,7 @@ export default async function Company({
 
       <ActiveTicketsTable />
       <LastTimeAsB1Table />
+      <ClosedTicketsTable />
     </div>
   );
 }
