@@ -17,6 +17,7 @@ import { useCallback, useState } from "react";
 
 export function OpenTicketRow({
   card,
+  cardName,
   b1,
   b2,
   users,
@@ -26,6 +27,7 @@ export function OpenTicketRow({
   remove,
 }: {
   card: string;
+  cardName?: string;
   b1?: { name: string | null | undefined; id: string | null };
   b2?: { name: string | null | undefined; id: string | null };
   users: { name: string; id: string }[];
@@ -121,7 +123,7 @@ export function OpenTicketRow({
 
   return (
     <TableRow>
-      <TableCell colSpan={3}>{card}</TableCell>
+      <TableCell colSpan={3}>{cardName}</TableCell>
       <TableCell>{b1?.name}</TableCell>
       <TableCell>{b2?.name}</TableCell>
       <TableCell className="flex gap-2" colSpan={1}>

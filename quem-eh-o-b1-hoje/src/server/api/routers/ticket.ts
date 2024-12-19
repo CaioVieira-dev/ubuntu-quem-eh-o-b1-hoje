@@ -1,5 +1,6 @@
 import { aliasedTable, and, eq } from "drizzle-orm";
 import { z } from "zod";
+import { env } from "~/env";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { tickets, users } from "~/server/db/schema";
@@ -123,17 +124,46 @@ export const ticketRouter = createTRPCRouter({
         .leftJoin(b1User, eq(b1User.id, tickets.b1Id))
         .leftJoin(b2User, eq(b2User.id, tickets.b2Id));
 
-      return companyTickets.map(({ b1User, b2User, tickets }) => {
+      const resultado: {
+        b1: {
+          name: string | null | undefined;
+          id: string | null;
+        };
+        b2: {
+          name: string | null | undefined;
+          id: string | null;
+        };
+        card: string;
+        cardName?: string;
+        ticketId: number;
+      }[] = [];
+
+      const clickupCardsAPIPath = "https://api.clickup.com/api/v2/task/";
+
+      for (const { b1User, b2User, tickets } of companyTickets) {
         const { card, id, b1Id, b2Id } = tickets;
         const { name: b1Name } = b1User ?? {};
         const { name: b2Name } = b2User ?? {};
 
-        return {
+        const splittedCard = card?.split?.("/");
+        const cardId = splittedCard?.[splittedCard?.length - 1];
+
+        const clickupCard = (await fetch(`${clickupCardsAPIPath}${cardId}`, {
+          method: "GET",
+          headers: {
+            Authorization: env.CLICKUP_PERSONAL_TOKEN_API,
+          },
+        }).then((response): unknown => response.json())) as { name?: string };
+
+        resultado.push({
           b1: { name: b1Name, id: b1Id },
           b2: { name: b2Name, id: b2Id },
           card,
+          cardName: clickupCard?.name,
           ticketId: id,
-        };
-      });
+        });
+      }
+
+      return resultado;
     }),
 });

@@ -105,10 +105,11 @@ export function ClosedTicketsTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {activeTickets?.map(({ b1, b2, card, ticketId }) => (
+              {activeTickets?.map(({ b1, b2, card, ticketId, cardName }) => (
                 <OpenTicketRow
                   key={`${card}-${ticketId}`}
                   card={card}
+                  cardName={cardName}
                   users={users}
                   b1={b1}
                   b2={b2}
