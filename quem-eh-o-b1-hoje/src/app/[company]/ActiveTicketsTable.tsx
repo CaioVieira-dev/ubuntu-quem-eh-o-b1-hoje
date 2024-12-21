@@ -71,13 +71,15 @@ export function ActiveTicketsTable() {
   });
 
   const { mutate: createTicket } = api.ticket.create.useMutation({
-    onSuccess() {
-      return utils.ticket.invalidate();
+    async onSuccess() {
+      await utils.ticket.invalidate();
+      await utils.user.invalidate();
     },
   });
   const { mutate: update } = api.ticket.update.useMutation({
-    onSuccess() {
-      return utils.ticket.invalidate();
+    async onSuccess() {
+      await utils.ticket.invalidate();
+      await utils.user.invalidate();
     },
   });
   const { mutate: closeTicketMutation } = api.ticket.closeTicket.useMutation({
@@ -86,8 +88,9 @@ export function ActiveTicketsTable() {
     },
   });
   const { mutate: deleteTicket } = api.ticket.remove.useMutation({
-    onSuccess() {
-      return utils.ticket.invalidate();
+    async onSuccess() {
+      await utils.ticket.invalidate();
+      await utils.user.invalidate();
     },
   });
   const { mutate: populateUsers } = api.user.populateClickupUsers.useMutation({

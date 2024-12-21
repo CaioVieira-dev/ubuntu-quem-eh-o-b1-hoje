@@ -26,18 +26,21 @@ export function ClosedTicketsTable() {
   const [users] = api.user.getUsers.useSuspenseQuery();
 
   const { mutate: update } = api.ticket.update.useMutation({
-    onSuccess() {
-      return utils.ticket.invalidate();
+    async onSuccess() {
+      await utils.ticket.invalidate();
+      await utils.user.invalidate();
     },
   });
   const { mutate: reopenTicketMutation } = api.ticket.reopenTicket.useMutation({
-    onSuccess() {
-      return utils.ticket.invalidate();
+    async onSuccess() {
+      await utils.ticket.invalidate();
+      await utils.user.invalidate();
     },
   });
   const { mutate: deleteTicket } = api.ticket.remove.useMutation({
-    onSuccess() {
-      return utils.ticket.invalidate();
+    async onSuccess() {
+      await utils.ticket.invalidate();
+      await utils.user.invalidate();
     },
   });
 
@@ -57,17 +60,17 @@ export function ClosedTicketsTable() {
         const { card, b1Id, b2Id } = newTicket;
         const updatedTicket: {
           card: string;
-          b1Id?: string | null | undefined;
-          b2Id?: string | null | undefined;
+          b1Id?: number | null | undefined;
+          b2Id?: number | null | undefined;
         } = {
           card,
         };
 
         if (b1Id !== oldTicket?.b1?.id) {
-          updatedTicket.b1Id = b1Id === "null" ? null : b1Id;
+          updatedTicket.b1Id = b1Id === "null" ? null : parseInt(b1Id!, 10);
         }
         if (b2Id !== oldTicket?.b2?.id) {
-          updatedTicket.b2Id = b1Id === "null" ? null : b2Id;
+          updatedTicket.b2Id = b1Id === "null" ? null : parseInt(b2Id!, 10);
         }
 
         update({ ...updatedTicket, ticketId: updatedTicketId });

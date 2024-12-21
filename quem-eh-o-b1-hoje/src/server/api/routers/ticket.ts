@@ -116,8 +116,8 @@ export const ticketRouter = createTRPCRouter({
       });
 
       const newTicket: createTicketType & {
-        b1UpdatedAt?: Date;
-        b2UpdatedAt?: Date;
+        b1UpdatedAt?: Date | null;
+        b2UpdatedAt?: Date | null;
         createdById: string;
         company: string;
       } = {
@@ -127,20 +127,6 @@ export const ticketRouter = createTRPCRouter({
       };
 
       if (oldTicket?.b1Id !== b1Id) {
-        newTicket.b1Id = b1Id;
-        newTicket.b1UpdatedAt = new Date();
-      }
-      if (oldTicket?.b2Id !== b2Id) {
-        newTicket.b2Id = b2Id;
-        newTicket.b2UpdatedAt = new Date();
-      }
-
-      await ctx.db
-        .update(tickets)
-        .set(newTicket)
-        .where(eq(tickets.id, ticketId));
-
-      if (oldTicket?.b1Id !== b1Id) {
         const isAdding = Boolean(
           (!oldTicket?.b1Id && b1Id) || (oldTicket?.b1Id && b1Id),
         );
@@ -148,6 +134,9 @@ export const ticketRouter = createTRPCRouter({
           (oldTicket?.b1Id && !b1Id) ||
             (oldTicket?.b1Id && b1Id && oldTicket?.b1Id !== b1Id),
         );
+
+        newTicket.b1Id = b1Id;
+        newTicket.b1UpdatedAt = isRemoving ? null : new Date();
 
         const params: {
           taskId: string;
@@ -169,7 +158,6 @@ export const ticketRouter = createTRPCRouter({
 
         await setClickupCardCustomField(params);
       }
-
       if (oldTicket?.b2Id !== b2Id) {
         const isAdding = Boolean(
           (!oldTicket?.b2Id && b2Id) || (oldTicket?.b2Id && b2Id),
@@ -178,6 +166,9 @@ export const ticketRouter = createTRPCRouter({
           (oldTicket?.b2Id && !b2Id) ||
             (oldTicket?.b2Id && b2Id && oldTicket?.b2Id !== b2Id),
         );
+
+        newTicket.b2Id = b2Id;
+        newTicket.b2UpdatedAt = isRemoving ? null : new Date();
 
         const params: {
           taskId: string;
@@ -199,6 +190,11 @@ export const ticketRouter = createTRPCRouter({
 
         await setClickupCardCustomField(params);
       }
+
+      await ctx.db
+        .update(tickets)
+        .set(newTicket)
+        .where(eq(tickets.id, ticketId));
     }),
   closeTicket: protectedProcedure
     .input(z.object({ ticketId: z.number() }))
