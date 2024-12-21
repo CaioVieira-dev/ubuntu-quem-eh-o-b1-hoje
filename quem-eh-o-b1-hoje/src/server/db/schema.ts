@@ -54,13 +54,18 @@ export const users = createTable("user", {
     withTimezone: true,
   }).default(sql`CURRENT_TIMESTAMP`),
   image: varchar("image", { length: 255 }),
+  clickUpUserId: integer("clickup_user_id"),
 });
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   accounts: many(accounts),
   b1In: many(tickets, { relationName: "b1Id" }),
   b2In: many(tickets, { relationName: "b2Id" }),
   createdTickets: many(tickets, { relationName: "createdBy" }),
+  clickupUser: one(clickUpUser, {
+    fields: [users.clickUpUserId],
+    references: [clickUpUser.id],
+  }),
 }));
 
 export const accounts = createTable(
@@ -186,4 +191,15 @@ export const ticketsRelations = relations(tickets, ({ one }) => ({
     references: [users.id],
     relationName: "b2Id",
   }),
+}));
+
+export const clickUpUser = createTable("click_up_user", {
+  id: integer("id").primaryKey(),
+  username: varchar("username", { length: 255 }),
+  email: varchar("email", { length: 255 }).notNull(),
+  profilePicture: varchar("profile_picture", { length: 255 }),
+});
+
+export const clickUpUsersRelations = relations(clickUpUser, ({ one }) => ({
+  user: one(users),
 }));

@@ -1,6 +1,7 @@
-import { aliasedTable, eq, max } from "drizzle-orm";
+import { aliasedTable, eq, max, sql } from "drizzle-orm";
+import { env } from "~/env";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { tickets, users } from "~/server/db/schema";
+import { clickUpUser, tickets, users } from "~/server/db/schema";
 
 export const userRouter = createTRPCRouter({
   getUsers: protectedProcedure.query(async ({ ctx }) => {
@@ -82,5 +83,53 @@ export const userRouter = createTRPCRouter({
       .from(users)
       .leftJoin(maxB1DateTicket, eq(maxB1DateTicket.b1Id, users.id))
       .leftJoin(maxB2DateTicket, eq(maxB2DateTicket.b2Id, users.id));
+  }),
+
+  populateClickupUsers: protectedProcedure.mutation(async ({ ctx }) => {
+    const listId = "901107826354";
+
+    const listMembers = (await fetch(
+      `https://api.clickup.com/api/v2/list/${listId}/member`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: env.CLICKUP_PERSONAL_TOKEN_API,
+        },
+      },
+    ).then((response): unknown => response.json())) as {
+      members: {
+        id: number;
+        username: string;
+        email: string;
+        profilePicture?: string;
+      }[];
+    };
+
+    if (listMembers?.members.length > 0) {
+      //snippet from https://github.com/drizzle-team/drizzle-orm/issues/1728#issuecomment-2506150847
+      const setObject = Object.keys(listMembers.members[0] as object).reduce(
+        (acc, key) => {
+          // Convert camelCase keys to snake_case for database compatibility,
+          // this is specially necessary if you have relationships
+          const columnName = key.replace(
+            /[A-Z]/g,
+            (letter) => `_${letter.toLowerCase()}`,
+          );
+          acc[columnName] = sql.raw(`excluded."${columnName}"`);
+          return acc;
+        },
+        {} as Record<string, unknown>,
+      );
+
+      await ctx.db
+        .insert(clickUpUser)
+        .values(listMembers.members)
+        .onConflictDoUpdate({
+          target: clickUpUser.id,
+          set: setObject,
+        });
+    }
+
+    return;
   }),
 });
