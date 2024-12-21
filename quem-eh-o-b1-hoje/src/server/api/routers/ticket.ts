@@ -202,19 +202,47 @@ export const ticketRouter = createTRPCRouter({
     }),
   closeTicket: protectedProcedure
     .input(z.object({ ticketId: z.number() }))
-    .mutation(({ ctx, input }) => {
-      return ctx.db
+    .mutation(async ({ ctx, input }) => {
+      const closedTickets = await ctx.db
         .update(tickets)
         .set({ isClosed: true })
-        .where(eq(tickets.id, input.ticketId));
+        .where(eq(tickets.id, input.ticketId))
+        .returning();
+
+      if (closedTickets[0]) {
+        const taskId = getClickupCardId(closedTickets[0].card);
+        await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
+          method: "PUT",
+          headers: {
+            accept: "application/json",
+            "content-type": "application/json",
+            Authorization: env.CLICKUP_PERSONAL_TOKEN_API,
+          },
+          body: JSON.stringify({ status: "fechado" }),
+        });
+      }
     }),
   reopenTicket: protectedProcedure
     .input(z.object({ ticketId: z.number() }))
-    .mutation(({ ctx, input }) => {
-      return ctx.db
+    .mutation(async ({ ctx, input }) => {
+      const reopenedTickets = await ctx.db
         .update(tickets)
         .set({ isClosed: false })
-        .where(eq(tickets.id, input.ticketId));
+        .where(eq(tickets.id, input.ticketId))
+        .returning();
+
+      if (reopenedTickets[0]) {
+        const taskId = getClickupCardId(reopenedTickets[0].card);
+        await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
+          method: "PUT",
+          headers: {
+            accept: "application/json",
+            "content-type": "application/json",
+            Authorization: env.CLICKUP_PERSONAL_TOKEN_API,
+          },
+          body: JSON.stringify({ status: "aberto" }),
+        });
+      }
     }),
   remove: protectedProcedure
     .input(z.object({ ticketId: z.number() }))
