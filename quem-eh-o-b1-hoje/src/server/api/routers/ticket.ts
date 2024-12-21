@@ -110,7 +110,6 @@ export const ticketRouter = createTRPCRouter({
   update: protectedProcedure
     .input(updateTicketSchema)
     .mutation(async ({ ctx, input }) => {
-      console.log(input);
       const { card, b1Id, b2Id, ticketId } = input;
       const oldTicket = await ctx.db.query.tickets.findFirst({
         where: ({ id }, { eq }) => eq(id, ticketId),
@@ -167,7 +166,7 @@ export const ticketRouter = createTRPCRouter({
         if (isRemoving && oldTicket?.b1Id) {
           params.remValue = oldTicket?.b1Id;
         }
-        console.log("b1 params", params);
+
         await setClickupCardCustomField(params);
       }
 
