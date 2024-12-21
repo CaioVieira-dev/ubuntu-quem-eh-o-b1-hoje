@@ -28,9 +28,9 @@ export function OpenTicketRow({
 }: {
   card: string;
   cardName?: string;
-  b1?: { name: string | null | undefined; id: string | null };
-  b2?: { name: string | null | undefined; id: string | null };
-  users: { name: string; id: string }[];
+  b1?: { name: string | null | undefined; id: number | null };
+  b2?: { name: string | null | undefined; id: number | null };
+  users: { name: string; id: number }[];
   update: (updatedTicket: {
     card: string;
     b1Id?: string | null | undefined;
@@ -42,14 +42,14 @@ export function OpenTicketRow({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [updatedCard, setUpdatedCard] = useState(card);
-  const [updatedb1, setUpdatedb1] = useState(b1?.id);
-  const [updatedb2, setUpdatedb2] = useState(b2?.id);
+  const [updatedb1, setUpdatedb1] = useState(`${b1?.id}`);
+  const [updatedb2, setUpdatedb2] = useState(`${b2?.id}`);
 
   const toggleIsEditing = useCallback(() => setIsEditing((last) => !last), []);
   const cancelUpdatedFields = useCallback(() => {
     setUpdatedCard(card);
-    setUpdatedb1(b1?.id);
-    setUpdatedb2(b2?.id);
+    setUpdatedb1(`${b1?.id}`);
+    setUpdatedb2(`${b2?.id}`);
     toggleIsEditing();
   }, [b1, b2, card, toggleIsEditing]);
   const updateTicket = useCallback(() => {
@@ -71,7 +71,7 @@ export function OpenTicketRow({
         <TableCell>
           <Select
             onValueChange={(value) => setUpdatedb1(value)}
-            defaultValue={updatedb1 ?? ""}
+            defaultValue={updatedb1 ? `${updatedb1}` : ""}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecione um b1"></SelectValue>
@@ -81,7 +81,7 @@ export function OpenTicketRow({
                 <span className="w-100 p-3"></span>
               </SelectItem>
               {users.map(({ id, name }) => (
-                <SelectItem key={id} value={id}>
+                <SelectItem key={id} value={`${id}`}>
                   {name}
                 </SelectItem>
               ))}
@@ -91,7 +91,7 @@ export function OpenTicketRow({
         <TableCell>
           <Select
             onValueChange={(value) => setUpdatedb2(value)}
-            defaultValue={updatedb2 ?? ""}
+            defaultValue={updatedb2 ? `${updatedb2}` : ""}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecione um b2"></SelectValue>
@@ -102,7 +102,7 @@ export function OpenTicketRow({
               </SelectItem>
 
               {users.map(({ id, name }) => (
-                <SelectItem key={id} value={id}>
+                <SelectItem key={id} value={`${id}`}>
                   {name}
                 </SelectItem>
               ))}

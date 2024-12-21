@@ -1,16 +1,16 @@
 import { aliasedTable, eq, max, sql } from "drizzle-orm";
 import { env } from "~/env";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { clickUpUser, tickets, users } from "~/server/db/schema";
+import { clickUpUser, tickets } from "~/server/db/schema";
 
 export const userRouter = createTRPCRouter({
   getUsers: protectedProcedure.query(async ({ ctx }) => {
     const possibleUsers = await ctx.db
       .select({
-        name: users.name,
-        id: users.id,
+        name: clickUpUser.username,
+        id: clickUpUser.id,
       })
-      .from(users);
+      .from(clickUpUser);
 
     return possibleUsers.map(({ id, name }) => {
       return { name: name ?? "sem nome", id };
@@ -50,7 +50,7 @@ export const userRouter = createTRPCRouter({
     //       "ticketB1"."b1_updated_at" as "lastTimeAsB1",
     //       "ticketB2"."id" as "b2Ticket",
     //       "ticketB2"."b2_updated_at" as "lastTimeAsB2"
-    //     from "quem-eh-o-b1-hoje_user" as "user"
+    //     from "quem-eh-o-b1-hoje_click_up_user" as "clickUpUser"
     //       left join (
     //           select *
     //       from "quem-eh-o-b1-hoje_ticket" as "ticket_b1_sub_1"
@@ -59,7 +59,7 @@ export const userRouter = createTRPCRouter({
     //           from "quem-eh-o-b1-hoje_ticket" as "ticket_b1_sub_2"
     //           where "ticket_b1_sub_2"."b1Id" = "ticket_b1_sub_1"."b1Id"
     //       )
-    //     ) as "ticketB1" on "ticketB1"."b1Id" = "user"."id"
+    //     ) as "ticketB1" on "ticketB1"."b1Id" = "clickUpUser"."id"
     //       left join (
     //           select *
     //       from "quem-eh-o-b1-hoje_ticket" as "ticket_b2_sub_1"
@@ -68,21 +68,21 @@ export const userRouter = createTRPCRouter({
     //           from "quem-eh-o-b1-hoje_ticket" as "ticket_b2_sub_2"
     //           where "ticket_b2_sub_2"."b1Id" = "ticket_b2_sub_1"."b1Id"
     //       )
-    //     ) as "ticketB2" on "ticketB2"."b2Id" = "user"."id"
+    //     ) as "ticketB2" on "ticketB2"."b2Id" = "clickUpUser"."id"
     //   `);
 
     return ctx.db
       .select({
-        id: users.id,
-        name: users.name,
+        id: clickUpUser.id,
+        name: clickUpUser.username,
         b1Ticket: maxB1DateTicket.b1Id,
         lastTimeAsB1: maxB1DateTicket.maxB1TicketUpdatedAt,
         b2Ticket: maxB2DateTicket.b2Id,
         lastTimeAsB2: maxB2DateTicket.maxB2TicketUpdatedAt,
       })
-      .from(users)
-      .leftJoin(maxB1DateTicket, eq(maxB1DateTicket.b1Id, users.id))
-      .leftJoin(maxB2DateTicket, eq(maxB2DateTicket.b2Id, users.id));
+      .from(clickUpUser)
+      .leftJoin(maxB1DateTicket, eq(maxB1DateTicket.b1Id, clickUpUser.id))
+      .leftJoin(maxB2DateTicket, eq(maxB2DateTicket.b2Id, clickUpUser.id));
   }),
 
   populateClickupUsers: protectedProcedure.mutation(async ({ ctx }) => {

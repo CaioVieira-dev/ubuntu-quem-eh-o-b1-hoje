@@ -34,16 +34,24 @@ import { OpenTicketRow } from "./OpenTicketRow";
 
 const formSchema = z.object({
   card: z.string(),
-  b1Id: z
-    .string()
-    .optional()
-    .nullable()
-    .transform((v) => (v === "null" ? null : v)),
-  b2Id: z
-    .string()
-    .optional()
-    .nullable()
-    .transform((v) => (v === "null" ? null : v)),
+  b1Id: z.preprocess((val) => {
+    if (val === "null") {
+      return null;
+    }
+    if (typeof val === "string") {
+      return parseInt(val, 10);
+    }
+    return val;
+  }, z.number().optional().nullable()),
+  b2Id: z.preprocess((val) => {
+    if (val === "null") {
+      return null;
+    }
+    if (typeof val === "string") {
+      return parseInt(val, 10);
+    }
+    return val;
+  }, z.number().optional().nullable()),
 });
 
 export function ActiveTicketsTable() {
@@ -82,9 +90,11 @@ export function ActiveTicketsTable() {
       return utils.ticket.invalidate();
     },
   });
-  const { mutate: populateUsers } = api.user.populateClickupUsers.useMutation(
-    {},
-  );
+  const { mutate: populateUsers } = api.user.populateClickupUsers.useMutation({
+    onSuccess() {
+      return;
+    },
+  });
 
   const addNewTicket = useCallback(
     (newTicket: z.infer<typeof formSchema>) => {
@@ -109,17 +119,17 @@ export function ActiveTicketsTable() {
         const { card, b1Id, b2Id } = newTicket;
         const updatedTicket: {
           card: string;
-          b1Id?: string | null | undefined;
-          b2Id?: string | null | undefined;
+          b1Id?: number | null | undefined;
+          b2Id?: number | null | undefined;
         } = {
           card,
         };
 
         if (b1Id !== oldTicket?.b1?.id) {
-          updatedTicket.b1Id = b1Id === "null" ? null : b1Id;
+          updatedTicket.b1Id = b1Id === "null" ? null : parseInt(b1Id!, 10);
         }
         if (b2Id !== oldTicket?.b2?.id) {
-          updatedTicket.b2Id = b1Id === "null" ? null : b2Id;
+          updatedTicket.b2Id = b2Id === "null" ? null : parseInt(b2Id!, 10);
         }
 
         update({ ...updatedTicket, ticketId: updatedTicketId });
@@ -148,7 +158,9 @@ export function ActiveTicketsTable() {
 
   return (
     <>
-      <Button onClick={() => populateUsers()}>popular usuarios</Button>
+      <Button onClick={() => populateUsers()} type="button">
+        popular usuarios
+      </Button>
       <Accordion
         type="single"
         collapsible
@@ -226,7 +238,9 @@ export function ActiveTicketsTable() {
                               <FormItem>
                                 <Select
                                   onValueChange={field.onChange}
-                                  defaultValue={field.value ?? ""}
+                                  defaultValue={
+                                    field.value ? `${field.value}` : ""
+                                  }
                                   key={`b2Id${selectKey}`}
                                 >
                                   <FormControl>
@@ -240,7 +254,7 @@ export function ActiveTicketsTable() {
                                     </SelectItem>
 
                                     {users.map(({ id, name }) => (
-                                      <SelectItem key={id} value={id}>
+                                      <SelectItem key={id} value={`${id}`}>
                                         {name}
                                       </SelectItem>
                                     ))}
@@ -258,7 +272,9 @@ export function ActiveTicketsTable() {
                               <FormItem>
                                 <Select
                                   onValueChange={field.onChange}
-                                  defaultValue={field.value ?? ""}
+                                  defaultValue={
+                                    field.value ? `${field.value}` : ""
+                                  }
                                   key={`b2Id${selectKey}`}
                                 >
                                   <FormControl>
@@ -271,7 +287,7 @@ export function ActiveTicketsTable() {
                                       <span className="w-100 p-3"></span>
                                     </SelectItem>
                                     {users.map(({ id, name }) => (
-                                      <SelectItem key={id} value={id}>
+                                      <SelectItem key={id} value={`${id}`}>
                                         {name}
                                       </SelectItem>
                                     ))}

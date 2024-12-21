@@ -59,9 +59,6 @@ export const users = createTable("user", {
 
 export const usersRelations = relations(users, ({ many, one }) => ({
   accounts: many(accounts),
-  b1In: many(tickets, { relationName: "b1Id" }),
-  b2In: many(tickets, { relationName: "b2Id" }),
-  createdTickets: many(tickets, { relationName: "createdBy" }),
   clickupUser: one(clickUpUser, {
     fields: [users.clickUpUserId],
     references: [clickUpUser.id],
@@ -147,9 +144,9 @@ export const tickets = createTable(
     createdById: varchar("created_by", { length: 255 })
       .notNull()
       .references(() => users.id),
-    b1Id: varchar("b1Id", { length: 255 }).references(() => users.id),
+    b1Id: integer("b1Id").references(() => clickUpUser.id),
     b1UpdatedAt: timestamp("b1_updated_at", { withTimezone: true }),
-    b2Id: varchar("b2Id", { length: 255 }).references(() => users.id),
+    b2Id: integer("b2Id").references(() => clickUpUser.id),
     b2UpdatedAt: timestamp("b2_updated_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
@@ -181,14 +178,14 @@ export const ticketsRelations = relations(tickets, ({ one }) => ({
     references: [users.id],
     relationName: "createdBy",
   }),
-  b1: one(users, {
+  b1: one(clickUpUser, {
     fields: [tickets.b1Id],
-    references: [users.id],
+    references: [clickUpUser.id],
     relationName: "b1Id",
   }),
-  b2: one(users, {
+  b2: one(clickUpUser, {
     fields: [tickets.b2Id],
-    references: [users.id],
+    references: [clickUpUser.id],
     relationName: "b2Id",
   }),
 }));
@@ -200,6 +197,12 @@ export const clickUpUser = createTable("click_up_user", {
   profilePicture: varchar("profile_picture", { length: 255 }),
 });
 
-export const clickUpUsersRelations = relations(clickUpUser, ({ one }) => ({
-  user: one(users),
-}));
+export const clickUpUsersRelations = relations(
+  clickUpUser,
+  ({ one, many }) => ({
+    user: one(users),
+    createdTickets: many(tickets, { relationName: "createdBy" }),
+    b1In: many(tickets, { relationName: "b1Id" }),
+    b2In: many(tickets, { relationName: "b2Id" }),
+  }),
+);
