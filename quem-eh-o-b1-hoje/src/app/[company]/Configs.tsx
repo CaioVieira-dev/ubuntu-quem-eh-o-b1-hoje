@@ -1,9 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaCogs, FaSave } from "react-icons/fa";
+import { FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import {
@@ -37,18 +38,26 @@ const formSchema = z.object({
 });
 
 export function Configs({ userId }: { userId: string }) {
+  const [showToken, setShowToken] = useState(false);
+  const [userConfig] = api.clickUpConfig.get.useSuspenseQuery();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       userId,
-      b1FieldUUID: "",
-      b2FieldUUID: "",
+      b1FieldUUID: userConfig.B1UUID ?? "",
+      b2FieldUUID: userConfig.B2UUID ?? "",
+      ticketListId: userConfig.ticketListId ?? ("" as unknown as bigint),
       clickUpUserToken: "",
     },
   });
   const { mutate: updateConfig } = api.clickUpConfig.update.useMutation({
     onSuccess() {
       form.reset();
+    },
+  });
+  const { mutate: populateUsers } = api.user.populateClickupUsers.useMutation({
+    onSuccess() {
+      return;
     },
   });
 
@@ -68,14 +77,16 @@ export function Configs({ userId }: { userId: string }) {
       </SheetTrigger>
       <SheetContent className="bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
         <SheetHeader className="mb-4">
-          <SheetTitle className="text-white">Configurações</SheetTitle>
+          <SheetTitle className="text-white">
+            Configurações do usuario
+          </SheetTitle>
           <SheetDescription>Edite suas configurações:</SheetDescription>
         </SheetHeader>
 
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(submit)}
-            className="flex flex-col gap-2"
+            className="mb-4 flex flex-col gap-2"
           >
             <FormField
               name="userId"
@@ -94,14 +105,29 @@ export function Configs({ userId }: { userId: string }) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Token da API do ClickUp:</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Preencha seu token do ClickUp"
-                      {...field}
-                    ></Input>
-                  </FormControl>
+                  <div className="flex">
+                    <FormControl>
+                      <Input
+                        placeholder="Preencha seu token do ClickUp"
+                        type={showToken ? "text" : "password"}
+                        autoComplete="off"
+                        {...field}
+                        className="rounded-e-none"
+                      ></Input>
+                    </FormControl>
+                    <Button
+                      type="button"
+                      onClick={() => setShowToken(!showToken)}
+                      title={showToken ? "Esconder" : "Mostrar"}
+                      className="rounded-s-none"
+                    >
+                      {showToken ? <FaRegEyeSlash /> : <FaRegEye />}
+                    </Button>
+                  </div>
                   <FormDescription>
-                    Token encontrado nas configurações do ClickUp
+                    Token encontrado nas configurações do ClickUp.{" "}
+                    {userConfig.tokenIsFiiled &&
+                      `Ultima atualização em ${userConfig?.tokenUpdatedAt?.toLocaleDateString() ?? ""}`}
                   </FormDescription>
                 </FormItem>
               )}
@@ -157,6 +183,17 @@ export function Configs({ userId }: { userId: string }) {
             </Button>
           </form>
         </Form>
+
+        <div className="flex flex-col gap-2 border-t-2 py-4">
+          <h4>Configurações do app:</h4>
+          <Button
+            onClick={() => populateUsers()}
+            type="button"
+            className="w-full"
+          >
+            popular usuarios
+          </Button>
+        </div>
       </SheetContent>
     </Sheet>
   );

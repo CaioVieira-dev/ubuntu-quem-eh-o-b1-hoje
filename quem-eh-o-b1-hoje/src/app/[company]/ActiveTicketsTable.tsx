@@ -93,11 +93,6 @@ export function ActiveTicketsTable() {
       await utils.user.invalidate();
     },
   });
-  const { mutate: populateUsers } = api.user.populateClickupUsers.useMutation({
-    onSuccess() {
-      return;
-    },
-  });
 
   const addNewTicket = useCallback(
     (newTicket: z.infer<typeof formSchema>) => {
@@ -160,160 +155,153 @@ export function ActiveTicketsTable() {
   }, [form, form.formState.isSubmitSuccessful]);
 
   return (
-    <>
-      <Button onClick={() => populateUsers()} type="button">
-        popular usuarios
-      </Button>
-      <Accordion
-        type="single"
-        collapsible
-        className="w-full"
-        defaultValue="item-1"
-      >
-        <AccordionItem value="item-1">
-          <AccordionTrigger>
-            <h3 className="flex w-full justify-center gap-2 text-xl font-extrabold tracking-tight sm:text-[2rem]">
-              Chamados em aberto
-            </h3>
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="">
-              <Table className="table-fixed">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead colSpan={3}>Card</TableHead>
-                    <TableHead>b1</TableHead>
-                    <TableHead>b2</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {activeTickets?.map(
-                    ({ b1, b2, card, ticketId, cardName }) => (
-                      <OpenTicketRow
-                        key={`${card}-${ticketId}`}
-                        card={card}
-                        cardName={cardName}
-                        users={users}
-                        b1={b1}
-                        b2={b2}
-                        update={(updatedTicket) =>
-                          updateTicket(updatedTicket, ticketId)
-                        }
-                        closeTicket={() => closeTicket(ticketId)}
-                        remove={() => removeTicket(ticketId)}
-                      />
-                    ),
-                  )}
-                </TableBody>
-              </Table>
-              {/* new ticket form */}
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(addNewTicket)}>
-                  <Table className="table-fixed">
-                    <TableBody>
-                      <TableRow
-                        key={"new-ticket"}
-                        className="hover:bg-transparent"
-                      >
-                        <TableCell colSpan={3}>
-                          <FormField
-                            name="card"
-                            control={form.control}
-                            render={({ field }) => (
-                              <FormItem>
+    <Accordion
+      type="single"
+      collapsible
+      className="w-full"
+      defaultValue="item-1"
+    >
+      <AccordionItem value="item-1">
+        <AccordionTrigger>
+          <h3 className="flex w-full justify-center gap-2 text-xl font-extrabold tracking-tight sm:text-[2rem]">
+            Chamados em aberto
+          </h3>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="">
+            <Table className="table-fixed">
+              <TableHeader>
+                <TableRow>
+                  <TableHead colSpan={3}>Card</TableHead>
+                  <TableHead>b1</TableHead>
+                  <TableHead>b2</TableHead>
+                  <TableHead>Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {activeTickets?.map(({ b1, b2, card, ticketId, cardName }) => (
+                  <OpenTicketRow
+                    key={`${card}-${ticketId}`}
+                    card={card}
+                    cardName={cardName}
+                    users={users}
+                    b1={b1}
+                    b2={b2}
+                    update={(updatedTicket) =>
+                      updateTicket(updatedTicket, ticketId)
+                    }
+                    closeTicket={() => closeTicket(ticketId)}
+                    remove={() => removeTicket(ticketId)}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+            {/* new ticket form */}
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(addNewTicket)}>
+                <Table className="table-fixed">
+                  <TableBody>
+                    <TableRow
+                      key={"new-ticket"}
+                      className="hover:bg-transparent"
+                    >
+                      <TableCell colSpan={3}>
+                        <FormField
+                          name="card"
+                          control={form.control}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input
+                                  placeholder="Preencha o link do card"
+                                  required
+                                  {...field}
+                                ></Input>
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        ></FormField>
+                      </TableCell>
+                      <TableCell>
+                        <FormField
+                          name="b1Id"
+                          control={form.control}
+                          render={({ field }) => (
+                            <FormItem>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={
+                                  field.value ? `${field.value}` : ""
+                                }
+                                key={`b2Id${selectKey}`}
+                              >
                                 <FormControl>
-                                  <Input
-                                    placeholder="Preencha o link do card"
-                                    required
-                                    {...field}
-                                  ></Input>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione um b1"></SelectValue>
+                                  </SelectTrigger>
                                 </FormControl>
-                              </FormItem>
-                            )}
-                          ></FormField>
-                        </TableCell>
-                        <TableCell>
-                          <FormField
-                            name="b1Id"
-                            control={form.control}
-                            render={({ field }) => (
-                              <FormItem>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={
-                                    field.value ? `${field.value}` : ""
-                                  }
-                                  key={`b2Id${selectKey}`}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Selecione um b1"></SelectValue>
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem key={-1} value={"null"}>
-                                      <span className="w-100 p-3"></span>
-                                    </SelectItem>
+                                <SelectContent>
+                                  <SelectItem key={-1} value={"null"}>
+                                    <span className="w-100 p-3"></span>
+                                  </SelectItem>
 
-                                    {users.map(({ id, name }) => (
-                                      <SelectItem key={id} value={`${id}`}>
-                                        {name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </FormItem>
-                            )}
-                          ></FormField>
-                        </TableCell>
-                        <TableCell>
-                          <FormField
-                            name="b2Id"
-                            control={form.control}
-                            render={({ field }) => (
-                              <FormItem>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={
-                                    field.value ? `${field.value}` : ""
-                                  }
-                                  key={`b2Id${selectKey}`}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Selecione um b2"></SelectValue>
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem key={-1} value={"null"}>
-                                      <span className="w-100 p-3"></span>
+                                  {users.map(({ id, name }) => (
+                                    <SelectItem key={id} value={`${id}`}>
+                                      {name}
                                     </SelectItem>
-                                    {users.map(({ id, name }) => (
-                                      <SelectItem key={id} value={`${id}`}>
-                                        {name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </FormItem>
-                            )}
-                          ></FormField>
-                        </TableCell>
-                        <TableCell>
-                          <Button variant={"secondary"} type="submit">
-                            Adicionar
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </form>
-              </Form>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormItem>
+                          )}
+                        ></FormField>
+                      </TableCell>
+                      <TableCell>
+                        <FormField
+                          name="b2Id"
+                          control={form.control}
+                          render={({ field }) => (
+                            <FormItem>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={
+                                  field.value ? `${field.value}` : ""
+                                }
+                                key={`b2Id${selectKey}`}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione um b2"></SelectValue>
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem key={-1} value={"null"}>
+                                    <span className="w-100 p-3"></span>
+                                  </SelectItem>
+                                  {users.map(({ id, name }) => (
+                                    <SelectItem key={id} value={`${id}`}>
+                                      {name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormItem>
+                          )}
+                        ></FormField>
+                      </TableCell>
+                      <TableCell>
+                        <Button variant={"secondary"} type="submit">
+                          Adicionar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </form>
+            </Form>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 }
