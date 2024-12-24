@@ -1,9 +1,9 @@
 import { aliasedTable, and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { env } from "~/env";
+import { decryptToken } from "~/lib/cypto-helpers";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { clickUpUser, tickets } from "~/server/db/schema";
+import { clickUpConfigs, clickUpUser, tickets } from "~/server/db/schema";
 
 const createTicketSchema = z.object({
   card: z.string(),
@@ -16,17 +16,17 @@ const updateTicketSchema = createTicketSchema.and(
 
 type createTicketType = z.infer<typeof createTicketSchema>;
 const COMPANY = "geolabor";
-const CLICKUP_CUSTOM_FIELD_B1_UUID = "47caf1a9-183f-42da-9991-77a12aa22a79";
-const CLICKUP_CUSTOM_FIELD_B2_UUID = "1abbb86a-051f-4c5a-94ae-8714d9d2a937";
 
 async function setClickupCardCustomField({
   taskId,
   fieldId,
+  token,
   addValue,
   remValue,
 }: {
   taskId: string;
   fieldId: string;
+  token: string;
   addValue?: number;
   remValue?: number;
 }) {
@@ -49,7 +49,7 @@ async function setClickupCardCustomField({
       headers: {
         accept: "application/json",
         "content-type": "application/json",
-        Authorization: env.CLICKUP_PERSONAL_TOKEN_API,
+        Authorization: token,
       },
       body: JSON.stringify({ value }),
     },
@@ -89,20 +89,41 @@ export const ticketRouter = createTRPCRouter({
         newTicket.b2UpdatedAt = new Date();
       }
 
+      const [clickUpConfig] = await ctx.db
+        .select({
+          B1UUID: clickUpConfigs.b1FieldUUID,
+          B2UUID: clickUpConfigs.b2FieldUUID,
+          encryptedToken: clickUpConfigs.clickUpUserToken,
+        })
+        .from(clickUpConfigs)
+        .where(eq(clickUpConfigs.userId, ctx.session.user.id));
+
+      if (
+        !clickUpConfig?.B1UUID ||
+        !clickUpConfig.B2UUID ||
+        !clickUpConfig?.encryptedToken
+      ) {
+        throw new Error("kabum");
+      }
+
+      const decriptedToken = decryptToken(clickUpConfig?.encryptedToken);
+
       await ctx.db.insert(tickets).values(newTicket);
 
       if (b1Id) {
         await setClickupCardCustomField({
-          fieldId: CLICKUP_CUSTOM_FIELD_B1_UUID,
+          fieldId: clickUpConfig?.B1UUID,
           taskId: getClickupCardId(card)!,
+          token: decriptedToken,
           addValue: b1Id,
         });
       }
 
       if (b2Id) {
         await setClickupCardCustomField({
-          fieldId: CLICKUP_CUSTOM_FIELD_B2_UUID,
+          fieldId: clickUpConfig.B2UUID,
           taskId: getClickupCardId(card)!,
+          token: decriptedToken,
           addValue: b2Id,
         });
       }
@@ -114,6 +135,25 @@ export const ticketRouter = createTRPCRouter({
       const oldTicket = await ctx.db.query.tickets.findFirst({
         where: ({ id }, { eq }) => eq(id, ticketId),
       });
+
+      const [clickUpConfig] = await ctx.db
+        .select({
+          B1UUID: clickUpConfigs.b1FieldUUID,
+          B2UUID: clickUpConfigs.b2FieldUUID,
+          encryptedToken: clickUpConfigs.clickUpUserToken,
+        })
+        .from(clickUpConfigs)
+        .where(eq(clickUpConfigs.userId, ctx.session.user.id));
+
+      if (
+        !clickUpConfig?.B1UUID ||
+        !clickUpConfig.B2UUID ||
+        !clickUpConfig?.encryptedToken
+      ) {
+        throw new Error("kabum");
+      }
+
+      const decriptedToken = decryptToken(clickUpConfig?.encryptedToken);
 
       const newTicket: createTicketType & {
         b1UpdatedAt?: Date | null;
@@ -141,10 +181,12 @@ export const ticketRouter = createTRPCRouter({
         const params: {
           taskId: string;
           fieldId: string;
+          token: string;
           addValue?: number;
           remValue?: number;
         } = {
-          fieldId: CLICKUP_CUSTOM_FIELD_B1_UUID,
+          fieldId: clickUpConfig?.B1UUID,
+          token: decriptedToken,
           taskId: getClickupCardId(card)!,
         };
 
@@ -173,10 +215,12 @@ export const ticketRouter = createTRPCRouter({
         const params: {
           taskId: string;
           fieldId: string;
+          token: string;
           addValue?: number;
           remValue?: number;
         } = {
-          fieldId: CLICKUP_CUSTOM_FIELD_B2_UUID,
+          fieldId: clickUpConfig?.B2UUID,
+          token: decriptedToken,
           taskId: getClickupCardId(card)!,
         };
 
@@ -206,13 +250,26 @@ export const ticketRouter = createTRPCRouter({
         .returning();
 
       if (closedTickets[0]) {
+        const [clickUpConfig] = await ctx.db
+          .select({
+            encryptedToken: clickUpConfigs.clickUpUserToken,
+          })
+          .from(clickUpConfigs)
+          .where(eq(clickUpConfigs.userId, ctx.session.user.id));
+
+        if (!clickUpConfig?.encryptedToken) {
+          throw new Error("kabum");
+        }
+
+        const decriptedToken = decryptToken(clickUpConfig?.encryptedToken);
+
         const taskId = getClickupCardId(closedTickets[0].card);
         await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
           method: "PUT",
           headers: {
             accept: "application/json",
             "content-type": "application/json",
-            Authorization: env.CLICKUP_PERSONAL_TOKEN_API,
+            Authorization: decriptedToken,
           },
           body: JSON.stringify({ status: "fechado" }),
         });
@@ -229,12 +286,25 @@ export const ticketRouter = createTRPCRouter({
 
       if (reopenedTickets[0]) {
         const taskId = getClickupCardId(reopenedTickets[0].card);
+        const [clickUpConfig] = await ctx.db
+          .select({
+            encryptedToken: clickUpConfigs.clickUpUserToken,
+          })
+          .from(clickUpConfigs)
+          .where(eq(clickUpConfigs.userId, ctx.session.user.id));
+
+        if (!clickUpConfig?.encryptedToken) {
+          throw new Error("kabum");
+        }
+
+        const decriptedToken = decryptToken(clickUpConfig?.encryptedToken);
+
         await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
           method: "PUT",
           headers: {
             accept: "application/json",
             "content-type": "application/json",
-            Authorization: env.CLICKUP_PERSONAL_TOKEN_API,
+            Authorization: decriptedToken,
           },
           body: JSON.stringify({ status: "aberto" }),
         });
@@ -283,6 +353,18 @@ export const ticketRouter = createTRPCRouter({
       }[] = [];
 
       const clickupCardsAPIPath = "https://api.clickup.com/api/v2/task/";
+      const [clickUpConfig] = await ctx.db
+        .select({
+          encryptedToken: clickUpConfigs.clickUpUserToken,
+        })
+        .from(clickUpConfigs)
+        .where(eq(clickUpConfigs.userId, ctx.session.user.id));
+
+      if (!clickUpConfig?.encryptedToken) {
+        throw new Error("kabum");
+      }
+
+      const decriptedToken = decryptToken(clickUpConfig?.encryptedToken);
 
       for (const { b1User, b2User, tickets } of companyTickets) {
         const { card, id, b1Id, b2Id } = tickets;
@@ -294,7 +376,7 @@ export const ticketRouter = createTRPCRouter({
         const clickupCard = (await fetch(`${clickupCardsAPIPath}${cardId}`, {
           method: "GET",
           headers: {
-            Authorization: env.CLICKUP_PERSONAL_TOKEN_API,
+            Authorization: decriptedToken,
           },
         }).then((response): unknown => response.json())) as { name?: string };
 

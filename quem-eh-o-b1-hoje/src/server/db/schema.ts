@@ -1,5 +1,6 @@
 import { relations, sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   index,
   integer,
@@ -185,3 +186,25 @@ export const clickUpUsersRelations = relations(
     b2In: many(tickets, { relationName: "b2Id" }),
   }),
 );
+
+export const clickUpConfigs = createTable("click_up_config", {
+  id: varchar("id", { length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id", { length: 255 }).notNull().unique(),
+  clickUpUserToken: varchar("click_up_user_token", { length: 255 }),
+  clickUpUserTokenUpdatedAt: timestamp("click_up_user_token_updated_at", {
+    withTimezone: true,
+  }).$onUpdate(() => new Date()),
+  ticketListId: bigint("ticket_list_id", { mode: "bigint" }),
+  b1FieldUUID: varchar("b1_field_UUID", { length: 255 }),
+  b2FieldUUID: varchar("b2_field_UUID", { length: 255 }),
+});
+
+export const clickUpConfigsRelations = relations(clickUpConfigs, ({ one }) => ({
+  user: one(users, {
+    fields: [clickUpConfigs.userId],
+    references: [users.id],
+  }),
+}));

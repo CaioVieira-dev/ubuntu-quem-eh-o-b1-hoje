@@ -1,7 +1,7 @@
 import { aliasedTable, eq, max, sql } from "drizzle-orm";
-import { env } from "~/env";
+import { decryptToken } from "~/lib/cypto-helpers";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { clickUpUser, tickets } from "~/server/db/schema";
+import { clickUpConfigs, clickUpUser, tickets } from "~/server/db/schema";
 
 export const userRouter = createTRPCRouter({
   getUsers: protectedProcedure.query(async ({ ctx }) => {
@@ -86,14 +86,26 @@ export const userRouter = createTRPCRouter({
   }),
 
   populateClickupUsers: protectedProcedure.mutation(async ({ ctx }) => {
-    const listId = "901107826354";
+    const [clickUpConfig] = await ctx.db
+      .select({
+        listId: clickUpConfigs.ticketListId,
+        encryptedToken: clickUpConfigs.clickUpUserToken,
+      })
+      .from(clickUpConfigs)
+      .where(eq(clickUpConfigs.userId, ctx.session.user.id));
+
+    if (!clickUpConfig?.listId || !clickUpConfig?.encryptedToken) {
+      throw new Error("kabum");
+    }
+
+    const decriptedToken = decryptToken(clickUpConfig?.encryptedToken);
 
     const listMembers = (await fetch(
-      `https://api.clickup.com/api/v2/list/${listId}/member`,
+      `https://api.clickup.com/api/v2/list/${clickUpConfig.listId}/member`,
       {
         method: "GET",
         headers: {
-          Authorization: env.CLICKUP_PERSONAL_TOKEN_API,
+          Authorization: decriptedToken,
         },
       },
     ).then((response): unknown => response.json())) as {
