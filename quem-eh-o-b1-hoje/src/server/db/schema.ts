@@ -208,3 +208,15 @@ export const clickUpConfigsRelations = relations(clickUpConfigs, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const invites = createTable("invites", {
+  id: varchar("id", { length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  email: varchar("email", { length: 255 }).notNull(),
+  used: boolean("used"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+});

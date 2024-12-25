@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaCogs, FaSave } from "react-icons/fa";
-import { FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
+import { FaRegEye, FaRegEyeSlash, FaUserPlus } from "react-icons/fa6";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import {
@@ -186,15 +186,77 @@ export function Configs({ userId }: { userId: string }) {
 
         <div className="flex flex-col gap-2 border-t-2 py-4">
           <h4>Configurações do app:</h4>
-          <Button
-            onClick={() => populateUsers()}
-            type="button"
-            className="w-full"
-          >
-            popular usuarios
-          </Button>
+          <InviteForm />
+
+          <div className="flex flex-col gap-2">
+            Faltou alguem na lista de B1?
+            <Button
+              onClick={() => populateUsers()}
+              type="button"
+              className="w-full"
+            >
+              Popular usuarios do ClickUp
+            </Button>
+          </div>
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+const inviteFormSchema = z.object({
+  email: z.string().email(),
+});
+
+function InviteForm() {
+  const form = useForm<z.infer<typeof inviteFormSchema>>({
+    resolver: zodResolver(inviteFormSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const { mutate: createInvite } = api.invite.create.useMutation({
+    onSuccess() {
+      form.reset();
+    },
+  });
+
+  const submit = useCallback(
+    (formDate: z.infer<typeof inviteFormSchema>) => {
+      createInvite(formDate);
+    },
+    [createInvite],
+  );
+
+  return (
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(submit)}
+        className="mb-4 flex flex-col gap-2"
+      >
+        <FormField
+          name="email"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Convide novos usuarios:</FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  placeholder="Digite um email..."
+                  {...field}
+                ></Input>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        ></FormField>
+        <Button type="submit" variant={"default"}>
+          <FaUserPlus />
+          Convidar
+        </Button>
+      </form>
+    </Form>
   );
 }
