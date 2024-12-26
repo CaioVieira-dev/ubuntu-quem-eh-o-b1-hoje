@@ -20,6 +20,7 @@ export const env = createEnv({
     CLICKUP_PERSONAL_TOKEN_API: z.string(),
     CLICK_UP_TOKEN_ENCRYPTION_KEY: z.string(),
     CLICK_UP_TOKEN_ENCRYPTION_SALT: z.string(),
+    COMPANY: z.string(),
   },
 
   /**
@@ -44,6 +45,7 @@ export const env = createEnv({
     CLICKUP_PERSONAL_TOKEN_API: process.env.CLICKUP_PERSONAL_TOKEN_API,
     CLICK_UP_TOKEN_ENCRYPTION_KEY: process.env.CLICK_UP_TOKEN_ENCRYPTION_KEY,
     CLICK_UP_TOKEN_ENCRYPTION_SALT: process.env.CLICK_UP_TOKEN_ENCRYPTION_SALT,
+    COMPANY: process.env.COMPANY,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

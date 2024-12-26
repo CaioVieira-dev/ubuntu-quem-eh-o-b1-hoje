@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "~/server/auth";
 import { HydrateClient } from "~/trpc/server";
 import LoginError from "./LoginError";
+import { env } from "~/env";
 
 export default async function Home() {
   const session = await auth();
@@ -18,13 +19,21 @@ export default async function Home() {
           <div className="flex flex-col items-center gap-2">
             <div className="flex flex-col items-center justify-center gap-4">
               <p className="text-center text-2xl text-white">
-                {session && <span>Logged in as {session.user?.name}</span>}
+                {session && <span>Logado como {session.user?.name}</span>}
               </p>
+              {session && (
+                <Link
+                  href={`/${env.COMPANY}`}
+                  className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+                >
+                  Ir para lista
+                </Link>
+              )}
               <Link
                 href={
                   session
                     ? "/api/auth/signout"
-                    : `/api/auth/signin?callbackUrl=${encodeURI("http://localhost:3000/geolabor")}`
+                    : `/api/auth/signin?callbackUrl=${encodeURI(`http://localhost:3000/${env.COMPANY}`)}`
                 }
                 className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
               >

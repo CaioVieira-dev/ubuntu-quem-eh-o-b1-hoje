@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { clickUpUser, tickets } from "~/server/db/schema";
 import { getUserConfigs } from "./clickUpConfig";
+import { env } from "~/env";
 
 const createTicketSchema = z.object({
   card: z.string(),
@@ -15,7 +16,6 @@ const updateTicketSchema = createTicketSchema.and(
 );
 
 type createTicketType = z.infer<typeof createTicketSchema>;
-const COMPANY = "geolabor";
 
 async function setClickupCardCustomField({
   taskId,
@@ -77,7 +77,7 @@ export const ticketRouter = createTRPCRouter({
       } = {
         createdById: ctx.session.user.id,
         card,
-        company: COMPANY,
+        company: env.COMPANY,
       };
 
       newTicket.b1Id = b1Id;
@@ -129,7 +129,7 @@ export const ticketRouter = createTRPCRouter({
       } = {
         createdById: ctx.session.user.id,
         card,
-        company: COMPANY,
+        company: env.COMPANY,
       };
 
       if (oldTicket?.b1Id !== b1Id) {
@@ -277,7 +277,7 @@ export const ticketRouter = createTRPCRouter({
         })
         .from(tickets)
         .where(
-          and(eq(tickets.company, COMPANY), eq(tickets.isClosed, isClosed)),
+          and(eq(tickets.company, env.COMPANY), eq(tickets.isClosed, isClosed)),
         )
         .leftJoin(b1User, eq(b1User.id, tickets.b1Id))
         .leftJoin(b2User, eq(b2User.id, tickets.b2Id));
