@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaCogs, FaSave } from "react-icons/fa";
 import { FaRegEye, FaRegEyeSlash, FaUserPlus } from "react-icons/fa6";
+import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import {
@@ -219,6 +220,14 @@ function InviteForm() {
   const { mutate: createInvite } = api.invite.create.useMutation({
     onSuccess() {
       form.reset();
+    },
+    onError(error) {
+      toast.error("Erro!!", {
+        description: error.message,
+        duration: Infinity,
+        closeButton: true,
+        position: "top-right",
+      });
     },
   });
 

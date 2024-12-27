@@ -13,7 +13,7 @@ export const inviteRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const oldInvite = await ctx.db.query.invites.findFirst({
         where({ email, used }, { and, eq }) {
-          return and(eq(email, input.email), eq(used, true));
+          return and(eq(email, input.email), eq(used, false));
         },
       });
 
