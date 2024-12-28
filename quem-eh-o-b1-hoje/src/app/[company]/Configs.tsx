@@ -5,7 +5,6 @@ import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaCogs, FaSave } from "react-icons/fa";
 import { FaRegEye, FaRegEyeSlash, FaUserPlus } from "react-icons/fa6";
-import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import {
@@ -26,6 +25,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "~/components/ui/sheet";
+import { showErrorToast, showSuccessToast } from "~/lib/toasts-helpers";
 import { api } from "~/trpc/react";
 
 const formSchema = z.object({
@@ -53,11 +53,13 @@ export function Configs({ userId }: { userId: string }) {
   });
   const { mutate: updateConfig } = api.clickUpConfig.update.useMutation({
     onSuccess() {
+      showSuccessToast("Configuração salva com sucesso");
       form.reset();
     },
   });
   const { mutate: populateUsers } = api.user.populateClickupUsers.useMutation({
     onSuccess() {
+      showSuccessToast("Usuários salvos com sucesso");
       return;
     },
   });
@@ -219,16 +221,10 @@ function InviteForm() {
 
   const { mutate: createInvite } = api.invite.create.useMutation({
     onSuccess() {
+      showSuccessToast("Usuário convidado com sucesso");
       form.reset();
     },
-    onError(error) {
-      toast.error("Erro!!", {
-        description: error.message,
-        duration: Infinity,
-        closeButton: true,
-        position: "top-right",
-      });
-    },
+    onError: showErrorToast,
   });
 
   const submit = useCallback(

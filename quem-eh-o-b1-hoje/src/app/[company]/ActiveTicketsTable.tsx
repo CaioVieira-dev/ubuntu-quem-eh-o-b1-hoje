@@ -31,6 +31,7 @@ import {
 } from "~/components/ui/accordion";
 import { api } from "~/trpc/react";
 import { OpenTicketRow } from "./OpenTicketRow";
+import { showErrorToast, showSuccessToast } from "~/lib/toasts-helpers";
 
 const formSchema = z.object({
   card: z.string(),
@@ -72,26 +73,34 @@ export function ActiveTicketsTable() {
 
   const { mutate: createTicket } = api.ticket.create.useMutation({
     async onSuccess() {
+      showSuccessToast("Card registrado com sucesso");
       await utils.ticket.invalidate();
       await utils.user.invalidate();
     },
+    onError: showErrorToast,
   });
   const { mutate: update } = api.ticket.update.useMutation({
     async onSuccess() {
+      showSuccessToast("Card atualizado com sucesso");
       await utils.ticket.invalidate();
       await utils.user.invalidate();
     },
+    onError: showErrorToast,
   });
   const { mutate: closeTicketMutation } = api.ticket.closeTicket.useMutation({
     onSuccess() {
+      showSuccessToast("Card fechado com sucesso");
       return utils.ticket.invalidate();
     },
+    onError: showErrorToast,
   });
   const { mutate: deleteTicket } = api.ticket.remove.useMutation({
     async onSuccess() {
+      showSuccessToast("Card removido com sucesso");
       await utils.ticket.invalidate();
       await utils.user.invalidate();
     },
+    onError: showErrorToast,
   });
 
   const addNewTicket = useCallback(

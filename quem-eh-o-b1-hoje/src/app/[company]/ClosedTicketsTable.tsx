@@ -17,6 +17,7 @@ import {
 } from "~/components/ui/accordion";
 import { api } from "~/trpc/react";
 import { OpenTicketRow } from "./OpenTicketRow";
+import { showErrorToast, showSuccessToast } from "~/lib/toasts-helpers";
 
 export function ClosedTicketsTable() {
   const utils = api.useUtils();
@@ -27,21 +28,27 @@ export function ClosedTicketsTable() {
 
   const { mutate: update } = api.ticket.update.useMutation({
     async onSuccess() {
+      showSuccessToast("Card atualizado com sucesso");
       await utils.ticket.invalidate();
       await utils.user.invalidate();
     },
+    onError: showErrorToast,
   });
   const { mutate: reopenTicketMutation } = api.ticket.reopenTicket.useMutation({
     async onSuccess() {
+      showSuccessToast("Card reaberto com sucesso");
       await utils.ticket.invalidate();
       await utils.user.invalidate();
     },
+    onError: showErrorToast,
   });
   const { mutate: deleteTicket } = api.ticket.remove.useMutation({
     async onSuccess() {
+      showSuccessToast("Card removido com sucesso");
       await utils.ticket.invalidate();
       await utils.user.invalidate();
     },
+    onError: showErrorToast,
   });
 
   const updateTicket = useCallback(
