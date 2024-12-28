@@ -297,35 +297,31 @@ export const ticketRouter = createTRPCRouter({
       }[] = [];
 
       const clickupCardsAPIPath = "https://api.clickup.com/api/v2/task/";
-      try {
-        const clickUpConfig = await getUserConfigs({ ctx });
+      const clickUpConfig = await getUserConfigs({ ctx });
 
-        for (const { b1User, b2User, tickets } of companyTickets) {
-          const { card, id, b1Id, b2Id } = tickets;
-          const { username: b1Name } = b1User ?? {};
-          const { username: b2Name } = b2User ?? {};
+      for (const { b1User, b2User, tickets } of companyTickets) {
+        const { card, id, b1Id, b2Id } = tickets;
+        const { username: b1Name } = b1User ?? {};
+        const { username: b2Name } = b2User ?? {};
 
-          const cardId = getClickupCardId(card);
+        const cardId = getClickupCardId(card);
 
-          const clickupCard = (await fetch(`${clickupCardsAPIPath}${cardId}`, {
-            method: "GET",
-            headers: {
-              Authorization: clickUpConfig.decriptedToken,
-            },
-          }).then((response): unknown => response.json())) as { name?: string };
+        const clickupCard = (await fetch(`${clickupCardsAPIPath}${cardId}`, {
+          method: "GET",
+          headers: {
+            Authorization: clickUpConfig.decriptedToken,
+          },
+        }).then((response): unknown => response.json())) as { name?: string };
 
-          resultado.push({
-            b1: { name: b1Name, id: b1Id },
-            b2: { name: b2Name, id: b2Id },
-            card,
-            cardName: clickupCard?.name,
-            ticketId: id,
-          });
-        }
-
-        return resultado;
-      } catch (e) {
-        return [];
+        resultado.push({
+          b1: { name: b1Name, id: b1Id },
+          b2: { name: b2Name, id: b2Id },
+          card,
+          cardName: clickupCard?.name,
+          ticketId: id,
+        });
       }
+
+      return resultado;
     }),
 });

@@ -3,6 +3,8 @@ import { ActiveTicketsTable } from "./ActiveTicketsTable";
 import { ClosedTicketsTable } from "./ClosedTicketsTable";
 import { Configs } from "./Configs";
 import { auth } from "~/server/auth";
+import { Suspense } from "react";
+import ErrorBoundary from "./ErrorBoundary";
 
 export default async function Company({
   params,
@@ -21,9 +23,21 @@ export default async function Company({
         {session?.user.id && <Configs userId={session?.user.id} />}
       </div>
 
-      <ActiveTicketsTable />
-      <LastTimeAsB1Table />
-      <ClosedTicketsTable />
+      <Suspense fallback={<>carregando...</>}>
+        <ErrorBoundary>
+          <ActiveTicketsTable />
+        </ErrorBoundary>
+      </Suspense>
+      <Suspense fallback={<>carregando...</>}>
+        <ErrorBoundary>
+          <LastTimeAsB1Table />
+        </ErrorBoundary>
+      </Suspense>
+      <Suspense fallback={<>carregando...</>}>
+        <ErrorBoundary>
+          <ClosedTicketsTable />
+        </ErrorBoundary>
+      </Suspense>
     </div>
   );
 }

@@ -28,7 +28,13 @@ export const showErrorToast = (
 ) =>
   toast.error("Erro!!", {
     description: error.message,
-    duration: Infinity,
+    closeButton: true,
+    position: "top-right",
+  });
+
+export const showErrorBoundaryToast = (message = "") =>
+  toast.error("Erro!!", {
+    description: message,
     closeButton: true,
     position: "top-right",
   });
@@ -36,7 +42,6 @@ export const showErrorToast = (
 export const showSuccessToast = (description = "") =>
   toast.success("Operação realizada com sucesso", {
     description,
-    duration: Infinity,
     closeButton: true,
     position: "top-right",
   });
