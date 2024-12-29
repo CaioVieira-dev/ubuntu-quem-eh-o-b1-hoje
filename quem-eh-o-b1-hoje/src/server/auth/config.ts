@@ -1,10 +1,12 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
+import { eq } from "drizzle-orm";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
 
 import { db } from "~/server/db";
 import {
   accounts,
+  invites,
   sessions,
   users,
   verificationTokens,
@@ -56,6 +58,36 @@ export const authConfig = {
     verificationTokensTable: verificationTokens,
   }),
   callbacks: {
+    signIn: async ({ user }) => {
+      const existingUser = await db.query.users.findFirst({
+        where({ email }, { eq }) {
+          return eq(email, user.email ?? "");
+        },
+      });
+
+      if (!existingUser) {
+        const invite = await db.query.invites.findFirst({
+          where({ email, used }, { and, eq }) {
+            return and(eq(used, false), eq(email, user.email ?? ""));
+          },
+        });
+
+        if (!invite) {
+          console.error(
+            "[ signIn error ] Usuario não convidado: ",
+            user?.email,
+          );
+          return "/?error=SemConvite";
+        }
+
+        await db
+          .update(invites)
+          .set({ used: true })
+          .where(eq(invites.id, invite.id));
+      }
+
+      return true;
+    },
     session: ({ session, user }) => ({
       ...session,
       user: {
@@ -63,5 +95,14 @@ export const authConfig = {
         id: user.id,
       },
     }),
+    async redirect({ baseUrl, url }) {
+      //if we get an callbackUrl we use it
+      if (url) {
+        return url;
+      }
+
+      //else, we go to the base url
+      return baseUrl;
+    },
   },
 } satisfies NextAuthConfig;
