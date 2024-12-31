@@ -124,9 +124,9 @@ export const tickets = createTable(
     createdById: varchar("created_by", { length: 255 })
       .notNull()
       .references(() => users.id),
-    b1Id: integer("b1Id").references(() => clickUpUser.id),
+    b1Id: integer("b1_id").references(() => clickUpUser.id),
     b1UpdatedAt: timestamp("b1_updated_at", { withTimezone: true }),
-    b2Id: integer("b2Id").references(() => clickUpUser.id),
+    b2Id: integer("b2_id").references(() => clickUpUser.id),
     b2UpdatedAt: timestamp("b2_updated_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
@@ -198,8 +198,8 @@ export const clickUpConfigs = createTable("click_up_config", {
     withTimezone: true,
   }).$onUpdate(() => new Date()),
   ticketListId: bigint("ticket_list_id", { mode: "bigint" }),
-  b1FieldUUID: varchar("b1_field_UUID", { length: 255 }),
-  b2FieldUUID: varchar("b2_field_UUID", { length: 255 }),
+  b1FieldUuid: varchar("b1_field_uuid", { length: 255 }),
+  b2FieldUuid: varchar("b2_field_uuid", { length: 255 }),
 });
 
 export const clickUpConfigsRelations = relations(clickUpConfigs, ({ one }) => ({

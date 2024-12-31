@@ -34,8 +34,8 @@ export const getUserConfigs = async ({
 }) => {
   const [clickUpConfig] = await ctx.db
     .select({
-      B1UUID: clickUpConfigs.b1FieldUUID,
-      B2UUID: clickUpConfigs.b2FieldUUID,
+      B1UUID: clickUpConfigs.b1FieldUuid,
+      B2UUID: clickUpConfigs.b2FieldUuid,
       ticketListId: clickUpConfigs.ticketListId,
       encryptedToken: clickUpConfigs.clickUpUserToken,
     })
@@ -123,8 +123,8 @@ export const clickUpConfigRouter = createTRPCRouter({
   get: protectedProcedure.query(async ({ ctx }) => {
     const [clickUpConfig] = await ctx.db
       .select({
-        B1UUID: clickUpConfigs.b1FieldUUID,
-        B2UUID: clickUpConfigs.b2FieldUUID,
+        B1UUID: clickUpConfigs.b1FieldUuid,
+        B2UUID: clickUpConfigs.b2FieldUuid,
         ticketListId: clickUpConfigs.ticketListId,
         tokenUpdatedAt: clickUpConfigs.clickUpUserTokenUpdatedAt,
         encriptedToken: clickUpConfigs.clickUpUserToken,
