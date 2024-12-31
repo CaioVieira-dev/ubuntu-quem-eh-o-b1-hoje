@@ -7,7 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "~/components/ui/accordion";
-import { showErrorBoundaryToast } from "~/lib/toasts-helpers";
+import { showErrorToast } from "~/lib/toasts-helpers";
 
 interface Props {
   children?: ReactNode;
@@ -32,7 +32,7 @@ class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught error:", error, errorInfo);
     this.setState({ error });
-    showErrorBoundaryToast(error.message);
+    showErrorToast(error.message);
   }
 
   public render() {

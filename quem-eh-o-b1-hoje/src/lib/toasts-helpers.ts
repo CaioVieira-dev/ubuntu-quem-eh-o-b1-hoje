@@ -9,32 +9,27 @@ import { toast } from "sonner";
 import { type z } from "zod";
 
 export const showErrorToast = (
-  error: TRPCClientErrorLike<{
-    input: unknown;
-    output: postgres.RowList<never[]>;
-    transformer: true;
-    errorShape: {
-      data: {
-        zodError: z.typeToFlattenedError<unknown, string> | null;
-        code: TRPC_ERROR_CODE_KEY;
-        httpStatus: number;
-        path?: string;
-        stack?: string;
-      };
-      message: string;
-      code: TRPC_ERROR_CODE_NUMBER;
-    };
-  }>,
+  error:
+    | TRPCClientErrorLike<{
+        input: unknown;
+        output: postgres.RowList<never[]>;
+        transformer: true;
+        errorShape: {
+          data: {
+            zodError: z.typeToFlattenedError<unknown, string> | null;
+            code: TRPC_ERROR_CODE_KEY;
+            httpStatus: number;
+            path?: string;
+            stack?: string;
+          };
+          message: string;
+          code: TRPC_ERROR_CODE_NUMBER;
+        };
+      }>
+    | string,
 ) =>
   toast.error("Erro!!", {
-    description: error.message,
-    closeButton: true,
-    position: "top-right",
-  });
-
-export const showErrorBoundaryToast = (message = "") =>
-  toast.error("Erro!!", {
-    description: message,
+    description: typeof error === "string" ? error : error.message,
     closeButton: true,
     position: "top-right",
   });
