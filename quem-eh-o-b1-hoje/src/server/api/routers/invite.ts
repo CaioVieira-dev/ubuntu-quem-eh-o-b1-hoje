@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { invites } from "~/server/db/schema";
-import { TRPCError } from "@trpc/server";
+import { createError } from "~/lib/error-helpers";
 
 export const inviteRouter = createTRPCRouter({
   create: protectedProcedure
@@ -18,7 +18,7 @@ export const inviteRouter = createTRPCRouter({
       });
 
       if (oldInvite) {
-        throw new TRPCError({
+        throw createError({
           code: "PRECONDITION_FAILED",
           message: `Usuario já convidado. Pede para ele tentar logar mais uma vez.`,
         });

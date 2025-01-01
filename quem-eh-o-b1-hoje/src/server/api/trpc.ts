@@ -7,9 +7,10 @@
  * need to use are documented accordingly near the end.
  */
 
-import { initTRPC, TRPCError } from "@trpc/server";
+import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import { createError } from "~/lib/error-helpers";
 
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
@@ -122,7 +123,7 @@ export const protectedProcedure = t.procedure
   .use(timingMiddleware)
   .use(({ ctx, next }) => {
     if (!ctx.session || !ctx.session.user) {
-      throw new TRPCError({ code: "UNAUTHORIZED" });
+      throw createError({ code: "UNAUTHORIZED" });
     }
     return next({
       ctx: {
