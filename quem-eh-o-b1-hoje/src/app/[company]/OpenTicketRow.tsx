@@ -1,7 +1,7 @@
 "use client";
 
 import { FaArrowLeft, FaCheckDouble, FaPencil, FaTrash } from "react-icons/fa6";
-import { FaSave, FaUndoAlt } from "react-icons/fa";
+import { FaSave, FaSync, FaUndoAlt } from "react-icons/fa";
 import { Input } from "~/components/ui/input";
 
 import { TableCell, TableRow } from "~/components/ui/table";
@@ -24,7 +24,9 @@ export function OpenTicketRow({
   update,
   closeTicket,
   reopenTicket,
+  updateTicketName,
   remove,
+  isSaving,
 }: {
   card: string;
   cardName?: string;
@@ -36,6 +38,8 @@ export function OpenTicketRow({
     b1Id?: string | null | undefined;
     b2Id?: string | null | undefined;
   }) => void;
+  isSaving?: boolean;
+  updateTicketName?: () => void;
   closeTicket?: () => void;
   reopenTicket?: () => void;
   remove: () => void;
@@ -66,12 +70,14 @@ export function OpenTicketRow({
           <Input
             value={updatedCard}
             onChange={(e) => setUpdatedCard(e.target.value)}
+            disabled={isSaving}
           />
         </TableCell>
         <TableCell>
           <Select
             onValueChange={(value) => setUpdatedb1(value)}
             defaultValue={updatedb1 ? `${updatedb1}` : ""}
+            disabled={isSaving}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecione um b1"></SelectValue>
@@ -92,6 +98,7 @@ export function OpenTicketRow({
           <Select
             onValueChange={(value) => setUpdatedb2(value)}
             defaultValue={updatedb2 ? `${updatedb2}` : ""}
+            disabled={isSaving}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecione um b2"></SelectValue>
@@ -110,10 +117,20 @@ export function OpenTicketRow({
           </Select>
         </TableCell>
         <TableCell>
-          <Button size={"icon"} variant={"ghost"} onClick={updateTicket}>
+          <Button
+            size={"icon"}
+            variant={"ghost"}
+            onClick={updateTicket}
+            disabled={isSaving}
+          >
             <FaSave />
           </Button>
-          <Button size={"icon"} variant={"ghost"} onClick={cancelUpdatedFields}>
+          <Button
+            size={"icon"}
+            variant={"ghost"}
+            onClick={cancelUpdatedFields}
+            disabled={isSaving}
+          >
             <FaArrowLeft />
           </Button>
         </TableCell>
@@ -127,20 +144,50 @@ export function OpenTicketRow({
       <TableCell>{b1?.name}</TableCell>
       <TableCell>{b2?.name}</TableCell>
       <TableCell className="flex gap-2" colSpan={1}>
-        <Button size={"icon"} variant={"ghost"} onClick={toggleIsEditing}>
+        <Button
+          size={"icon"}
+          variant={"ghost"}
+          onClick={toggleIsEditing}
+          disabled={isSaving}
+        >
           <FaPencil />
         </Button>
+        {updateTicketName && (
+          <Button
+            size={"icon"}
+            variant={"ghost"}
+            onClick={updateTicketName}
+            disabled={isSaving}
+          >
+            <FaSync />
+          </Button>
+        )}
         {closeTicket && (
-          <Button size={"icon"} variant={"ghost"} onClick={closeTicket}>
+          <Button
+            size={"icon"}
+            variant={"ghost"}
+            onClick={closeTicket}
+            disabled={isSaving}
+          >
             <FaCheckDouble />
           </Button>
         )}
         {reopenTicket && (
-          <Button size={"icon"} variant={"ghost"} onClick={reopenTicket}>
+          <Button
+            size={"icon"}
+            variant={"ghost"}
+            onClick={reopenTicket}
+            disabled={isSaving}
+          >
             <FaUndoAlt />
           </Button>
         )}
-        <Button size={"icon"} variant={"ghost"} onClick={remove}>
+        <Button
+          size={"icon"}
+          variant={"ghost"}
+          onClick={remove}
+          disabled={isSaving}
+        >
           <FaTrash />
         </Button>
       </TableCell>

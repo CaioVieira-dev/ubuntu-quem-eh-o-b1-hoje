@@ -89,6 +89,13 @@ export const getUserConfigs = async ({
   };
 };
 
+export type UserConfigsType = {
+  decriptedToken: string;
+  B1UUID: string;
+  B2UUID: string;
+  listId: bigint;
+};
+
 export const clickUpConfigRouter = createTRPCRouter({
   update: protectedProcedure
     .input(updateClickUpConfigSchema)
