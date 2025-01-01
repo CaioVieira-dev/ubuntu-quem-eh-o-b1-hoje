@@ -121,6 +121,7 @@ export const tickets = createTable(
   {
     id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
     card: varchar("card", { length: 256 }).notNull(),
+    cardName: text("card_name").notNull(),
     createdById: varchar("created_by", { length: 255 })
       .notNull()
       .references(() => users.id),

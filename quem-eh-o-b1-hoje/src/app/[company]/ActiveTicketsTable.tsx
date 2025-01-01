@@ -22,7 +22,7 @@ import {
 } from "~/components/ui/select";
 import { SelectValue } from "@radix-ui/react-select";
 import { Button } from "~/components/ui/button";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -71,37 +71,54 @@ export function ActiveTicketsTable() {
     },
   });
 
-  const { mutate: createTicket } = api.ticket.create.useMutation({
-    async onSuccess() {
-      showSuccessToast("Card registrado com sucesso");
-      await utils.ticket.invalidate();
-      await utils.user.invalidate();
-    },
-    onError: showErrorToast,
-  });
-  const { mutate: update } = api.ticket.update.useMutation({
-    async onSuccess() {
-      showSuccessToast("Card atualizado com sucesso");
-      await utils.ticket.invalidate();
-      await utils.user.invalidate();
-    },
-    onError: showErrorToast,
-  });
-  const { mutate: closeTicketMutation } = api.ticket.closeTicket.useMutation({
+  const { mutate: createTicket, isPending: isCreatingTicket } =
+    api.ticket.create.useMutation({
+      async onSuccess() {
+        showSuccessToast("Card registrado com sucesso");
+        await utils.ticket.invalidate();
+        await utils.user.invalidate();
+        form.reset();
+        //little hack to return selects to the placeholder text
+        setSelectKey(+new Date());
+      },
+      onError: showErrorToast,
+    });
+  const { mutate: update, isPending: isUpdatingTicket } =
+    api.ticket.update.useMutation({
+      async onSuccess() {
+        showSuccessToast("Card atualizado com sucesso");
+        await utils.ticket.invalidate();
+        await utils.user.invalidate();
+      },
+      onError: showErrorToast,
+    });
+  const { mutate: closeTicketMutation, isPending: isClosingTicket } =
+    api.ticket.closeTicket.useMutation({
+      onSuccess() {
+        showSuccessToast("Card fechado com sucesso");
+        return utils.ticket.invalidate();
+      },
+      onError: showErrorToast,
+    });
+  const {
+    mutate: refreshTicketNameMutation,
+    isPending: isRefreshingTicketName,
+  } = api.ticket.refrehTicketName.useMutation({
     onSuccess() {
-      showSuccessToast("Card fechado com sucesso");
+      showSuccessToast("Nome do card atualizado com sucesso");
       return utils.ticket.invalidate();
     },
     onError: showErrorToast,
   });
-  const { mutate: deleteTicket } = api.ticket.remove.useMutation({
-    async onSuccess() {
-      showSuccessToast("Card removido com sucesso");
-      await utils.ticket.invalidate();
-      await utils.user.invalidate();
-    },
-    onError: showErrorToast,
-  });
+  const { mutate: deleteTicket, isPending: isDeletingTicket } =
+    api.ticket.remove.useMutation({
+      async onSuccess() {
+        showSuccessToast("Card removido com sucesso");
+        await utils.ticket.invalidate();
+        await utils.user.invalidate();
+      },
+      onError: showErrorToast,
+    });
 
   const addNewTicket = useCallback(
     (newTicket: z.infer<typeof formSchema>) => {
@@ -144,6 +161,10 @@ export function ActiveTicketsTable() {
     },
     [activeTickets, update],
   );
+  const updateTicketName = useCallback(
+    (ticketId: number) => refreshTicketNameMutation({ ticketId }),
+    [refreshTicketNameMutation],
+  );
   const closeTicket = useCallback(
     (ticketId: number) => closeTicketMutation({ ticketId }),
     [closeTicketMutation],
@@ -154,14 +175,6 @@ export function ActiveTicketsTable() {
     },
     [deleteTicket],
   );
-
-  useEffect(() => {
-    if (form.formState.isSubmitSuccessful) {
-      form.reset();
-      //little hack to return selects to the placeholder text
-      setSelectKey(+new Date());
-    }
-  }, [form, form.formState.isSubmitSuccessful]);
 
   return (
     <Accordion
@@ -199,8 +212,15 @@ export function ActiveTicketsTable() {
                     update={(updatedTicket) =>
                       updateTicket(updatedTicket, ticketId)
                     }
+                    updateTicketName={() => updateTicketName(ticketId)}
                     closeTicket={() => closeTicket(ticketId)}
                     remove={() => removeTicket(ticketId)}
+                    isSaving={
+                      isUpdatingTicket ||
+                      isClosingTicket ||
+                      isRefreshingTicketName ||
+                      isDeletingTicket
+                    }
                   />
                 ))}
               </TableBody>
@@ -224,6 +244,7 @@ export function ActiveTicketsTable() {
                                 <Input
                                   placeholder="Preencha o link do card"
                                   required
+                                  disabled={isCreatingTicket}
                                   {...field}
                                 ></Input>
                               </FormControl>
@@ -242,6 +263,7 @@ export function ActiveTicketsTable() {
                                 defaultValue={
                                   field.value ? `${field.value}` : ""
                                 }
+                                disabled={isCreatingTicket}
                                 key={`b2Id${selectKey}`}
                               >
                                 <FormControl>
@@ -276,6 +298,7 @@ export function ActiveTicketsTable() {
                                 defaultValue={
                                   field.value ? `${field.value}` : ""
                                 }
+                                disabled={isCreatingTicket}
                                 key={`b2Id${selectKey}`}
                               >
                                 <FormControl>
@@ -299,7 +322,11 @@ export function ActiveTicketsTable() {
                         ></FormField>
                       </TableCell>
                       <TableCell>
-                        <Button variant={"secondary"} type="submit">
+                        <Button
+                          variant={"secondary"}
+                          type="submit"
+                          disabled={isCreatingTicket}
+                        >
                           Adicionar
                         </Button>
                       </TableCell>

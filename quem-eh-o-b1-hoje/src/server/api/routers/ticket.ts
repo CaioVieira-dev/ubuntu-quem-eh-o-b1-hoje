@@ -3,8 +3,9 @@ import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { clickUpUser, tickets } from "~/server/db/schema";
-import { getUserConfigs } from "./clickUpConfig";
+import { getUserConfigs, type UserConfigsType } from "./clickUpConfig";
 import { env } from "~/env";
+import { TRPCError } from "@trpc/server";
 
 const createTicketSchema = z.object({
   card: z.string(),
@@ -56,6 +57,21 @@ async function setClickupCardCustomField({
   );
 }
 
+function getClickUpCard({
+  cardId,
+  clickUpConfig,
+}: {
+  cardId: string;
+  clickUpConfig: UserConfigsType;
+}) {
+  return fetch(`https://api.clickup.com/api/v2/task/${cardId}`, {
+    method: "GET",
+    headers: {
+      Authorization: clickUpConfig.decriptedToken,
+    },
+  }).then((response): unknown => response.json()) as Promise<{ name?: string }>;
+}
+
 function getClickupCardId(url: string) {
   const splittedCard = url?.split?.("/");
   const cardId = splittedCard?.[splittedCard?.length - 1];
@@ -69,15 +85,36 @@ export const ticketRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { card, b1Id, b2Id } = input;
 
+      const clickUpConfig = await getUserConfigs({ ctx });
+      const cardId = getClickupCardId(card);
+      if (!cardId) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            'Link mal formatado. O formato esperado é "https://app.clickup.com/t/{identificador do card}"',
+        });
+      }
+
+      const cardName = (await getClickUpCard({ cardId, clickUpConfig })).name;
+
+      if (!cardName) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            "Erro ao buscar nome do card. Verifique o link enviado e tente novamente.",
+        });
+      }
       const newTicket: createTicketType & {
         b1UpdatedAt?: Date;
         b2UpdatedAt?: Date;
         createdById: string;
         company: string;
+        cardName: string;
       } = {
         createdById: ctx.session.user.id,
         card,
         company: env.COMPANY,
+        cardName,
       };
 
       newTicket.b1Id = b1Id;
@@ -88,8 +125,6 @@ export const ticketRouter = createTRPCRouter({
       if (b2Id) {
         newTicket.b2UpdatedAt = new Date();
       }
-
-      const clickUpConfig = await getUserConfigs({ ctx });
 
       await ctx.db.insert(tickets).values(newTicket);
 
@@ -292,36 +327,72 @@ export const ticketRouter = createTRPCRouter({
           id: number | null;
         };
         card: string;
-        cardName?: string;
+        cardName: string;
         ticketId: number;
       }[] = [];
 
-      const clickupCardsAPIPath = "https://api.clickup.com/api/v2/task/";
-      const clickUpConfig = await getUserConfigs({ ctx });
-
       for (const { b1User, b2User, tickets } of companyTickets) {
-        const { card, id, b1Id, b2Id } = tickets;
+        const { card, id, b1Id, b2Id, cardName } = tickets;
         const { username: b1Name } = b1User ?? {};
         const { username: b2Name } = b2User ?? {};
-
-        const cardId = getClickupCardId(card);
-
-        const clickupCard = (await fetch(`${clickupCardsAPIPath}${cardId}`, {
-          method: "GET",
-          headers: {
-            Authorization: clickUpConfig.decriptedToken,
-          },
-        }).then((response): unknown => response.json())) as { name?: string };
 
         resultado.push({
           b1: { name: b1Name, id: b1Id },
           b2: { name: b2Name, id: b2Id },
           card,
-          cardName: clickupCard?.name,
+          cardName,
           ticketId: id,
         });
       }
 
       return resultado;
+    }),
+
+  refrehTicketName: protectedProcedure
+    .input(z.object({ ticketId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const { ticketId } = input;
+      const clickUpConfig = await getUserConfigs({ ctx });
+
+      const ticket = await ctx.db.query.tickets.findFirst({
+        where({ id }, { eq }) {
+          return eq(id, ticketId);
+        },
+        columns: {
+          card: true,
+        },
+      });
+
+      if (!ticket) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            "Card não encontrado. Recarregue a pagina e tente novamente.",
+        });
+      }
+
+      const cardId = getClickupCardId(ticket.card);
+      if (!cardId) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            'Link mal formatado. O formato esperado é "https://app.clickup.com/t/{identificador do card}". Atualize o link do card e tente novamente.',
+        });
+      }
+
+      const cardName = (await getClickUpCard({ cardId, clickUpConfig })).name;
+
+      if (!cardName) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            "Erro ao buscar nome do card. Verifique o link enviado e tente novamente. Atualize o link do card e tente novamente.",
+        });
+      }
+
+      await ctx.db
+        .update(tickets)
+        .set({ cardName })
+        .where(eq(tickets.id, ticketId));
     }),
 });
