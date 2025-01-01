@@ -5,7 +5,7 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { clickUpUser, tickets } from "~/server/db/schema";
 import { getUserConfigs, type UserConfigsType } from "./clickUpConfig";
 import { env } from "~/env";
-import { TRPCError } from "@trpc/server";
+import { createError } from "~/lib/error-helpers";
 
 const createTicketSchema = z.object({
   card: z.string(),
@@ -88,7 +88,7 @@ export const ticketRouter = createTRPCRouter({
       const clickUpConfig = await getUserConfigs({ ctx });
       const cardId = getClickupCardId(card);
       if (!cardId) {
-        throw new TRPCError({
+        throw createError({
           code: "PRECONDITION_FAILED",
           message:
             'Link mal formatado. O formato esperado é "https://app.clickup.com/t/{identificador do card}"',
@@ -98,7 +98,7 @@ export const ticketRouter = createTRPCRouter({
       const cardName = (await getClickUpCard({ cardId, clickUpConfig })).name;
 
       if (!cardName) {
-        throw new TRPCError({
+        throw createError({
           code: "PRECONDITION_FAILED",
           message:
             "Erro ao buscar nome do card. Verifique o link enviado e tente novamente.",
@@ -364,7 +364,7 @@ export const ticketRouter = createTRPCRouter({
       });
 
       if (!ticket) {
-        throw new TRPCError({
+        throw createError({
           code: "PRECONDITION_FAILED",
           message:
             "Card não encontrado. Recarregue a pagina e tente novamente.",
@@ -373,7 +373,7 @@ export const ticketRouter = createTRPCRouter({
 
       const cardId = getClickupCardId(ticket.card);
       if (!cardId) {
-        throw new TRPCError({
+        throw createError({
           code: "PRECONDITION_FAILED",
           message:
             'Link mal formatado. O formato esperado é "https://app.clickup.com/t/{identificador do card}". Atualize o link do card e tente novamente.',
@@ -383,7 +383,7 @@ export const ticketRouter = createTRPCRouter({
       const cardName = (await getClickUpCard({ cardId, clickUpConfig })).name;
 
       if (!cardName) {
-        throw new TRPCError({
+        throw createError({
           code: "PRECONDITION_FAILED",
           message:
             "Erro ao buscar nome do card. Verifique o link enviado e tente novamente. Atualize o link do card e tente novamente.",
