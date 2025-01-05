@@ -1,4 +1,4 @@
-import { aliasedTable, and, eq } from "drizzle-orm";
+import { aliasedTable, and, asc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
@@ -77,6 +77,22 @@ function getClickupCardId(url: string) {
   const cardId = splittedCard?.[splittedCard?.length - 1];
 
   return cardId;
+}
+
+function getPaginationParams({
+  page,
+  pageSize,
+}: {
+  page: number;
+  pageSize: number;
+}) {
+  const limit = pageSize;
+  const offset = pageSize * (page ? page - 1 : 0);
+
+  return {
+    limit,
+    offset,
+  };
 }
 
 export const ticketRouter = createTRPCRouter({
@@ -298,26 +314,42 @@ export const ticketRouter = createTRPCRouter({
     }),
 
   getCompanyTickets: protectedProcedure
-    .input(z.object({ isClosed: z.boolean() }))
+    .input(
+      z.object({
+        isClosed: z.boolean(),
+        page: z.number().optional(),
+        pageSize: z.number().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
-      const { isClosed } = input;
+      const { isClosed, page, pageSize } = input;
       const b1User = aliasedTable(clickUpUser, "b1User");
       const b2User = aliasedTable(clickUpUser, "b2User");
 
-      const companyTickets = await ctx.db
+      const query = ctx.db
         .select({
           b1User,
           b2User,
           tickets,
+          totalCount: sql<string>`COUNT(*) OVER()`.as("totalCount"),
         })
         .from(tickets)
         .where(
           and(eq(tickets.company, env.COMPANY), eq(tickets.isClosed, isClosed)),
         )
         .leftJoin(b1User, eq(b1User.id, tickets.b1Id))
-        .leftJoin(b2User, eq(b2User.id, tickets.b2Id));
+        .leftJoin(b2User, eq(b2User.id, tickets.b2Id))
+        .orderBy(asc(tickets.id));
 
-      const resultado: {
+      if (typeof page === "number" && typeof pageSize === "number") {
+        const { limit, offset } = getPaginationParams({ page, pageSize });
+
+        query.limit(limit).offset(offset);
+      }
+
+      const companyTickets = await query;
+
+      const result: {
         b1: {
           name: string | null | undefined;
           id: number | null;
@@ -336,7 +368,7 @@ export const ticketRouter = createTRPCRouter({
         const { username: b1Name } = b1User ?? {};
         const { username: b2Name } = b2User ?? {};
 
-        resultado.push({
+        result.push({
           b1: { name: b1Name, id: b1Id },
           b2: { name: b2Name, id: b2Id },
           card,
@@ -344,8 +376,12 @@ export const ticketRouter = createTRPCRouter({
           ticketId: id,
         });
       }
+      const total =
+        companyTickets.length > 0
+          ? parseInt(companyTickets[0]?.totalCount ?? "0", 10)
+          : 0;
 
-      return resultado;
+      return { result, total, page, pageSize };
     }),
 
   refrehTicketName: protectedProcedure
