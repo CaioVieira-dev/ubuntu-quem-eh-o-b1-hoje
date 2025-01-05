@@ -118,7 +118,7 @@ export function DataTable<TData, TValue>({
         </Button>
 
         <div>
-          Página {page} de {totalPages}
+          Página {page} de {totalPages === 0 ? 1 : totalPages}
         </div>
 
         <Button
