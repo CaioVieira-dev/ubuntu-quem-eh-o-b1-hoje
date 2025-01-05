@@ -36,6 +36,8 @@ const formSchema = z.object({
     .refine((val) => val > 0n, "O valor precisa ser positivo."),
   b1FieldUuid: z.string().optional(),
   b2FieldUuid: z.string().optional(),
+  openLabel: z.string().optional(),
+  closedLabel: z.string().optional(),
 });
 
 export function Configs({ userId }: { userId: string }) {
@@ -48,6 +50,8 @@ export function Configs({ userId }: { userId: string }) {
       userId,
       b1FieldUuid: userConfig.B1UUID ?? "",
       b2FieldUuid: userConfig.B2UUID ?? "",
+      openLabel: userConfig.openLabel ?? "",
+      closedLabel: userConfig.closedLabel ?? "",
       ticketListId: userConfig.ticketListId ?? ("" as unknown as bigint),
       clickUpUserToken: "",
     },
@@ -60,6 +64,8 @@ export function Configs({ userId }: { userId: string }) {
         userId,
         b1FieldUuid: data?.b1FieldUuid ?? "",
         b2FieldUuid: data?.b2FieldUuid ?? "",
+        closedLabel: data?.closedLabel ?? "",
+        openLabel: data?.openLabel ?? "",
         ticketListId: data?.ticketListId ?? ("" as unknown as bigint),
         clickUpUserToken: "",
       });
@@ -183,6 +189,30 @@ export function Configs({ userId }: { userId: string }) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Id do campo B2 nos cards:</FormLabel>
+                  <FormControl>
+                    <Input {...field}></Input>
+                  </FormControl>
+                </FormItem>
+              )}
+            ></FormField>
+            <FormField
+              name="openLabel"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Label para status aberto:</FormLabel>
+                  <FormControl>
+                    <Input {...field}></Input>
+                  </FormControl>
+                </FormItem>
+              )}
+            ></FormField>
+            <FormField
+              name="closedLabel"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Label para status fechado:</FormLabel>
                   <FormControl>
                     <Input {...field}></Input>
                   </FormControl>

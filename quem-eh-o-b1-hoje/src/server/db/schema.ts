@@ -201,6 +201,8 @@ export const clickUpConfigs = createTable("click_up_config", {
   ticketListId: bigint("ticket_list_id", { mode: "bigint" }),
   b1FieldUuid: varchar("b1_field_uuid", { length: 255 }),
   b2FieldUuid: varchar("b2_field_uuid", { length: 255 }),
+  openLabel: varchar("open_label", { length: 255 }),
+  closedLabel: varchar("closed_label", { length: 255 }),
 });
 
 export const clickUpConfigsRelations = relations(clickUpConfigs, ({ one }) => ({

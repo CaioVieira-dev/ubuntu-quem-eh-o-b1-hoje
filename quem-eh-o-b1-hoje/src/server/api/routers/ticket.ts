@@ -308,7 +308,7 @@ export const ticketRouter = createTRPCRouter({
               "content-type": "application/json",
               Authorization: clickUpConfig.decriptedToken,
             },
-            body: JSON.stringify({ status: "fechado" }),
+            body: JSON.stringify({ status: clickUpConfig.closedlabel }),
           },
         );
 
@@ -350,7 +350,7 @@ export const ticketRouter = createTRPCRouter({
               "content-type": "application/json",
               Authorization: clickUpConfig.decriptedToken,
             },
-            body: JSON.stringify({ status: "aberto" }),
+            body: JSON.stringify({ status: clickUpConfig.openLabel }),
           },
         );
 
