@@ -1,4 +1,4 @@
-import { aliasedTable, eq, max, sql } from "drizzle-orm";
+import { aliasedTable, asc, count, eq, max, sql } from "drizzle-orm";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { clickUpUser, tickets } from "~/server/db/schema";
 import { getUserConfigs } from "./clickUpConfig";
@@ -26,6 +26,7 @@ export const userRouter = createTRPCRouter({
           "maxB1TicketUpdatedAt",
         ),
         b1Id: b1Ticket.b1Id,
+        timesAsB1: count(b1Ticket.b1Id).as("timesAsB1"),
       })
       .from(b1Ticket)
       .groupBy(b1Ticket.b1Id)
@@ -36,40 +37,11 @@ export const userRouter = createTRPCRouter({
           "maxB2TicketUpdatedAt",
         ),
         b2Id: b2Ticket.b2Id,
+        timesAsB2: count(b2Ticket.b2Id).as("timesAsB2"),
       })
       .from(b2Ticket)
       .groupBy(b2Ticket.b2Id)
       .as("maxB2DateTicket");
-
-    /**The query as sql works, but it doesn't have the types from typescript as well defined */
-    // const r = await ctx.db.execute(sql`
-    //     select
-    //       "user"."id",
-    //       "user"."name",
-    //       "ticketB1"."id" as "b1Ticket",
-    //       "ticketB1"."b1_updated_at" as "lastTimeAsB1",
-    //       "ticketB2"."id" as "b2Ticket",
-    //       "ticketB2"."b2_updated_at" as "lastTimeAsB2"
-    //     from "quem-eh-o-b1-hoje_click_up_user" as "clickUpUser"
-    //       left join (
-    //           select *
-    //       from "quem-eh-o-b1-hoje_ticket" as "ticket_b1_sub_1"
-    //       where "ticket_b1_sub_1"."b1_updated_at" = (
-    //           select MAX("ticket_b1_sub_2"."b1_updated_at")
-    //           from "quem-eh-o-b1-hoje_ticket" as "ticket_b1_sub_2"
-    //           where "ticket_b1_sub_2"."b1Id" = "ticket_b1_sub_1"."b1Id"
-    //       )
-    //     ) as "ticketB1" on "ticketB1"."b1Id" = "clickUpUser"."id"
-    //       left join (
-    //           select *
-    //       from "quem-eh-o-b1-hoje_ticket" as "ticket_b2_sub_1"
-    //       where "ticket_b2_sub_1"."b2_updated_at" = (
-    //           select MAX("ticket_b2_sub_2"."b2_updated_at")
-    //           from "quem-eh-o-b1-hoje_ticket" as "ticket_b2_sub_2"
-    //           where "ticket_b2_sub_2"."b1Id" = "ticket_b2_sub_1"."b1Id"
-    //       )
-    //     ) as "ticketB2" on "ticketB2"."b2Id" = "clickUpUser"."id"
-    //   `);
 
     return ctx.db
       .select({
@@ -77,12 +49,21 @@ export const userRouter = createTRPCRouter({
         name: clickUpUser.username,
         b1Ticket: maxB1DateTicket.b1Id,
         lastTimeAsB1: maxB1DateTicket.maxB1TicketUpdatedAt,
+        timesAsB1: maxB1DateTicket.timesAsB1,
         b2Ticket: maxB2DateTicket.b2Id,
         lastTimeAsB2: maxB2DateTicket.maxB2TicketUpdatedAt,
+        timesAsB2: maxB2DateTicket.timesAsB2,
       })
       .from(clickUpUser)
       .leftJoin(maxB1DateTicket, eq(maxB1DateTicket.b1Id, clickUpUser.id))
-      .leftJoin(maxB2DateTicket, eq(maxB2DateTicket.b2Id, clickUpUser.id));
+      .leftJoin(maxB2DateTicket, eq(maxB2DateTicket.b2Id, clickUpUser.id))
+      .orderBy(
+        asc(maxB1DateTicket.timesAsB1),
+        asc(maxB1DateTicket.maxB1TicketUpdatedAt),
+        asc(maxB2DateTicket.timesAsB2),
+        asc(maxB2DateTicket.maxB2TicketUpdatedAt),
+        asc(clickUpUser.username),
+      );
   }),
 
   populateClickupUsers: protectedProcedure.mutation(async ({ ctx }) => {
