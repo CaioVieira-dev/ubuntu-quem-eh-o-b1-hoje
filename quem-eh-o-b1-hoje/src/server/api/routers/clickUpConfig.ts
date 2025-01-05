@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import type * as Schema from "~/server/db/schema";
 import { clickUpConfigs } from "~/server/db/schema";
