@@ -60,7 +60,7 @@ export function ClosedTicketsTable() {
       },
       updatedTicketId: number,
     ) => {
-      const oldTicket = activeTickets.find(
+      const oldTicket = activeTickets.result.find(
         ({ ticketId }) => ticketId === updatedTicketId,
       );
       if (oldTicket) {
@@ -115,21 +115,23 @@ export function ClosedTicketsTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {activeTickets?.map(({ b1, b2, card, ticketId, cardName }) => (
-                <OpenTicketRow
-                  key={`${card}-${ticketId}`}
-                  card={card}
-                  cardName={cardName}
-                  users={users}
-                  b1={b1}
-                  b2={b2}
-                  update={(updatedTicket) =>
-                    updateTicket(updatedTicket, ticketId)
-                  }
-                  reopenTicket={() => reopenTicket(ticketId)}
-                  remove={() => removeTicket(ticketId)}
-                />
-              ))}
+              {activeTickets.result?.map(
+                ({ b1, b2, card, ticketId, cardName }) => (
+                  <OpenTicketRow
+                    key={`${card}-${ticketId}`}
+                    card={card}
+                    cardName={cardName}
+                    users={users}
+                    b1={b1}
+                    b2={b2}
+                    update={(updatedTicket) =>
+                      updateTicket(updatedTicket, ticketId)
+                    }
+                    reopenTicket={() => reopenTicket(ticketId)}
+                    remove={() => removeTicket(ticketId)}
+                  />
+                ),
+              )}
             </TableBody>
           </Table>
         </AccordionContent>

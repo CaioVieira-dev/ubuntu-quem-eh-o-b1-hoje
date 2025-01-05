@@ -19,6 +19,7 @@ import { api } from "~/trpc/react";
 import { OpenTicketRow } from "./OpenTicketRow";
 import { showErrorToast, showSuccessToast } from "~/lib/toasts-helpers";
 import { CreateTicketForm } from "./CreateTicketForm";
+import { TicketsDataTable } from "./TicketsDataTable";
 
 export function ActiveTicketsTable() {
   const utils = api.useUtils();
@@ -74,7 +75,7 @@ export function ActiveTicketsTable() {
       },
       updatedTicketId: number,
     ) => {
-      const oldTicket = activeTickets.find(
+      const oldTicket = activeTickets.result.find(
         ({ ticketId }) => ticketId === updatedTicketId,
       );
       if (oldTicket) {
@@ -129,6 +130,7 @@ export function ActiveTicketsTable() {
         </AccordionTrigger>
         <AccordionContent>
           <div className="">
+            <TicketsDataTable />
             <Table className="table-fixed">
               <TableHeader>
                 <TableRow>
@@ -139,28 +141,30 @@ export function ActiveTicketsTable() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {activeTickets?.map(({ b1, b2, card, ticketId, cardName }) => (
-                  <OpenTicketRow
-                    key={`${card}-${ticketId}`}
-                    card={card}
-                    cardName={cardName}
-                    users={users}
-                    b1={b1}
-                    b2={b2}
-                    update={(updatedTicket) =>
-                      updateTicket(updatedTicket, ticketId)
-                    }
-                    updateTicketName={() => updateTicketName(ticketId)}
-                    closeTicket={() => closeTicket(ticketId)}
-                    remove={() => removeTicket(ticketId)}
-                    isSaving={
-                      isUpdatingTicket ||
-                      isClosingTicket ||
-                      isRefreshingTicketName ||
-                      isDeletingTicket
-                    }
-                  />
-                ))}
+                {activeTickets.result?.map(
+                  ({ b1, b2, card, ticketId, cardName }) => (
+                    <OpenTicketRow
+                      key={`${card}-${ticketId}`}
+                      card={card}
+                      cardName={cardName}
+                      users={users}
+                      b1={b1}
+                      b2={b2}
+                      update={(updatedTicket) =>
+                        updateTicket(updatedTicket, ticketId)
+                      }
+                      updateTicketName={() => updateTicketName(ticketId)}
+                      closeTicket={() => closeTicket(ticketId)}
+                      remove={() => removeTicket(ticketId)}
+                      isSaving={
+                        isUpdatingTicket ||
+                        isClosingTicket ||
+                        isRefreshingTicketName ||
+                        isDeletingTicket
+                      }
+                    />
+                  ),
+                )}
               </TableBody>
             </Table>
             <CreateTicketForm />

@@ -10,8 +10,8 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
+  SelectValue,
 } from "~/components/ui/select";
-import { SelectValue } from "@radix-ui/react-select";
 import { Button } from "~/components/ui/button";
 import { useCallback, useState } from "react";
 
