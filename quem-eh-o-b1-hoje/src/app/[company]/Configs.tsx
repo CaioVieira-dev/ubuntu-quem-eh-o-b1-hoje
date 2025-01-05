@@ -34,27 +34,35 @@ const formSchema = z.object({
   ticketListId: z
     .bigint()
     .refine((val) => val > 0n, "O valor precisa ser positivo."),
-  b1FieldUUID: z.string().optional(),
-  b2FieldUUID: z.string().optional(),
+  b1FieldUuid: z.string().optional(),
+  b2FieldUuid: z.string().optional(),
 });
 
 export function Configs({ userId }: { userId: string }) {
+  const utils = api.useUtils();
   const [showToken, setShowToken] = useState(false);
   const [userConfig] = api.clickUpConfig.get.useSuspenseQuery();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       userId,
-      b1FieldUUID: userConfig.B1UUID ?? "",
-      b2FieldUUID: userConfig.B2UUID ?? "",
+      b1FieldUuid: userConfig.B1UUID ?? "",
+      b2FieldUuid: userConfig.B2UUID ?? "",
       ticketListId: userConfig.ticketListId ?? ("" as unknown as bigint),
       clickUpUserToken: "",
     },
   });
   const { mutate: updateConfig } = api.clickUpConfig.update.useMutation({
-    onSuccess() {
+    async onSuccess([data]) {
       showSuccessToast("Configuração salva com sucesso");
-      form.reset();
+      await utils.clickUpConfig.invalidate();
+      form.reset({
+        userId,
+        b1FieldUuid: data?.b1FieldUuid ?? "",
+        b2FieldUuid: data?.b2FieldUuid ?? "",
+        ticketListId: data?.ticketListId ?? ("" as unknown as bigint),
+        clickUpUserToken: "",
+      });
     },
   });
   const { mutate: populateUsers } = api.user.populateClickupUsers.useMutation({
@@ -122,6 +130,7 @@ export function Configs({ userId }: { userId: string }) {
                       type="button"
                       onClick={() => setShowToken(!showToken)}
                       title={showToken ? "Esconder" : "Mostrar"}
+                      variant="secondary"
                       className="rounded-s-none"
                     >
                       {showToken ? <FaRegEyeSlash /> : <FaRegEye />}
@@ -157,7 +166,7 @@ export function Configs({ userId }: { userId: string }) {
               )}
             ></FormField>
             <FormField
-              name="b1FieldUUID"
+              name="b1FieldUuid"
               control={form.control}
               render={({ field }) => (
                 <FormItem>
@@ -169,7 +178,7 @@ export function Configs({ userId }: { userId: string }) {
               )}
             ></FormField>
             <FormField
-              name="b2FieldUUID"
+              name="b2FieldUuid"
               control={form.control}
               render={({ field }) => (
                 <FormItem>
@@ -180,7 +189,7 @@ export function Configs({ userId }: { userId: string }) {
                 </FormItem>
               )}
             ></FormField>
-            <Button type="submit" variant={"default"}>
+            <Button type="submit" variant={"secondary"}>
               <FaSave />
               Salvar
             </Button>
@@ -196,6 +205,7 @@ export function Configs({ userId }: { userId: string }) {
             <Button
               onClick={() => populateUsers()}
               type="button"
+              variant="secondary"
               className="w-full"
             >
               Popular usuarios do ClickUp
@@ -257,7 +267,7 @@ function InviteForm() {
             </FormItem>
           )}
         ></FormField>
-        <Button type="submit" variant={"default"}>
+        <Button type="submit" variant={"secondary"}>
           <FaUserPlus />
           Convidar
         </Button>

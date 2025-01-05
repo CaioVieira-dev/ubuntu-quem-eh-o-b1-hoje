@@ -43,18 +43,33 @@ async function setClickupCardCustomField({
     value.rem = [remValue];
   }
 
-  await fetch(
-    `https://api.clickup.com/api/v2/task/${taskId}/field/${fieldId}`,
-    {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        "content-type": "application/json",
-        Authorization: token,
+  try {
+    const r = await fetch(
+      `https://api.clickup.com/api/v2/task/${taskId}/field/${fieldId}`,
+      {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+          Authorization: token,
+        },
+        body: JSON.stringify({ value }),
       },
-      body: JSON.stringify({ value }),
-    },
-  );
+    );
+
+    if (r.ok === false) {
+      const erro = (await r.json()) as { err: string; ECODE: string };
+
+      throw new Error(
+        `Erro ao tentar atualizar campo customizado. Verifique suas configurações, e tente novamente. \n\n Detalhes: ${erro.err}`,
+      );
+    }
+  } catch (e) {
+    throw createError({
+      code: "PRECONDITION_FAILED",
+      message: e instanceof Error ? e.message : JSON.stringify(e),
+    });
+  }
 }
 
 function getClickUpCard({
@@ -183,7 +198,7 @@ export const ticketRouter = createTRPCRouter({
         company: env.COMPANY,
       };
 
-      if (oldTicket?.b1Id !== b1Id) {
+      if ((b1Id || b1Id === null) && oldTicket?.b1Id !== b1Id) {
         const isAdding = Boolean(
           (!oldTicket?.b1Id && b1Id) || (oldTicket?.b1Id && b1Id),
         );
@@ -217,7 +232,8 @@ export const ticketRouter = createTRPCRouter({
 
         await setClickupCardCustomField(params);
       }
-      if (oldTicket?.b2Id !== b2Id) {
+
+      if ((b2Id || b2Id === null) && oldTicket?.b2Id !== b2Id) {
         const isAdding = Boolean(
           (!oldTicket?.b2Id && b2Id) || (oldTicket?.b2Id && b2Id),
         );

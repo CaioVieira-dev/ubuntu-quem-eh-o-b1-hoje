@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import type * as Schema from "~/server/db/schema";
 import { clickUpConfigs } from "~/server/db/schema";
@@ -12,8 +12,8 @@ const updateClickUpConfigSchema = z.object({
   userId: z.string(),
   clickUpUserToken: z.string().optional(),
   ticketListId: z.bigint().optional(),
-  b1FieldUUID: z.string().optional(),
-  b2FieldUUID: z.string().optional(),
+  b1FieldUuid: z.string().optional(),
+  b2FieldUuid: z.string().optional(),
 });
 
 type updateClickUpConfigType = z.infer<typeof updateClickUpConfigSchema>;
@@ -102,8 +102,8 @@ export const clickUpConfigRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const {
         userId,
-        b1FieldUUID,
-        b2FieldUUID,
+        b1FieldUuid,
+        b2FieldUuid,
         clickUpUserToken,
         ticketListId,
       } = input;
@@ -112,8 +112,8 @@ export const clickUpConfigRouter = createTRPCRouter({
         clickUpUserTokenUpdatedAt?: Date;
       } = {
         userId,
-        b1FieldUUID,
-        b2FieldUUID,
+        b1FieldUuid,
+        b2FieldUuid,
         ticketListId,
       };
 
@@ -122,10 +122,14 @@ export const clickUpConfigRouter = createTRPCRouter({
         newConfig.clickUpUserTokenUpdatedAt = new Date();
       }
 
-      await ctx.db.insert(clickUpConfigs).values(newConfig).onConflictDoUpdate({
-        target: clickUpConfigs.userId,
-        set: newConfig,
-      });
+      return ctx.db
+        .insert(clickUpConfigs)
+        .values(newConfig)
+        .onConflictDoUpdate({
+          target: clickUpConfigs.userId,
+          set: newConfig,
+        })
+        .returning();
     }),
   get: protectedProcedure.query(async ({ ctx }) => {
     const [clickUpConfig] = await ctx.db
