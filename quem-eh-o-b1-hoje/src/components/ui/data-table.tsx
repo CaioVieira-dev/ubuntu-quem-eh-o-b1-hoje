@@ -7,7 +7,12 @@ import {
   type Row,
   useReactTable,
 } from "@tanstack/react-table";
-import { useCallback, type Dispatch, type SetStateAction } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 
 import {
   Table,
@@ -31,6 +36,7 @@ interface DataTableProps<TData, TValue> {
   };
   total: number;
   editingRows: Record<number, boolean>;
+  children?: ReactNode;
 }
 
 export function DataTable<TData, TValue>({
@@ -39,6 +45,7 @@ export function DataTable<TData, TValue>({
   paginationStates,
   total,
   editingRows,
+  children,
 }: DataTableProps<TData, TValue>) {
   const { page, pageSize, setPage, setPageSize } = paginationStates;
 
@@ -107,6 +114,7 @@ export function DataTable<TData, TValue>({
           ))}
         </TableBody>
       </Table>
+      {children ?? children}
       <div className="flex items-center justify-end space-x-2 py-4">
         <Button
           onClick={() => setPage((prev) => Math.max(0, prev - 1))}

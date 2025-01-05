@@ -9,6 +9,7 @@ import {
 import { DataTable } from "~/components/ui/data-table";
 
 import { useTicketTable } from "~/hooks/useTicketTable";
+import { CreateTicketForm } from "./CreateTicketForm";
 
 export function ActiveTicketsTable() {
   const { columns, data, editingRows, paginationStates, total } =
@@ -34,7 +35,9 @@ export function ActiveTicketsTable() {
             editingRows={editingRows}
             paginationStates={paginationStates}
             total={total}
-          />
+          >
+            <CreateTicketForm />
+          </DataTable>
         </AccordionContent>
       </AccordionItem>
     </Accordion>
