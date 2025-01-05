@@ -1,4 +1,4 @@
-import { aliasedTable, and, eq, sql } from "drizzle-orm";
+import { aliasedTable, and, asc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
@@ -338,7 +338,8 @@ export const ticketRouter = createTRPCRouter({
           and(eq(tickets.company, env.COMPANY), eq(tickets.isClosed, isClosed)),
         )
         .leftJoin(b1User, eq(b1User.id, tickets.b1Id))
-        .leftJoin(b2User, eq(b2User.id, tickets.b2Id));
+        .leftJoin(b2User, eq(b2User.id, tickets.b2Id))
+        .orderBy(asc(tickets.id));
 
       if (typeof page === "number" && typeof pageSize === "number") {
         const { limit, offset } = getPaginationParams({ page, pageSize });
