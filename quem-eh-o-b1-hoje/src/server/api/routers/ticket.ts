@@ -18,6 +18,10 @@ const updateTicketSchema = createTicketSchema.and(
 
 type createTicketType = z.infer<typeof createTicketSchema>;
 
+async function getErrorFromClickupApi(r: Response) {
+  return (await r.json()) as { err: string; ECODE: string };
+}
+
 async function setClickupCardCustomField({
   taskId,
   fieldId,
@@ -58,7 +62,7 @@ async function setClickupCardCustomField({
     );
 
     if (r.ok === false) {
-      const erro = (await r.json()) as { err: string; ECODE: string };
+      const erro = await getErrorFromClickupApi(r);
 
       throw new Error(
         `Erro ao tentar atualizar campo customizado. Verifique suas configurações, e tente novamente. \n\n Detalhes: ${erro.err}`,
@@ -84,7 +88,17 @@ function getClickUpCard({
     headers: {
       Authorization: clickUpConfig.decriptedToken,
     },
-  }).then((response): unknown => response.json()) as Promise<{ name?: string }>;
+  }).then(async (response): Promise<unknown> => {
+    if (response.ok === false) {
+      const erro = await getErrorFromClickupApi(response);
+      throw createError({
+        code: "PRECONDITION_FAILED",
+        message: `Erro ao tentar buscar o card no clickup. \n\nDetalhes: ${erro.err}`,
+      });
+    }
+
+    return response.json();
+  }) as Promise<{ name?: string }>;
 }
 
 function getClickupCardId(url: string) {
@@ -157,8 +171,6 @@ export const ticketRouter = createTRPCRouter({
         newTicket.b2UpdatedAt = new Date();
       }
 
-      await ctx.db.insert(tickets).values(newTicket);
-
       if (b1Id) {
         await setClickupCardCustomField({
           fieldId: clickUpConfig?.B1UUID,
@@ -176,6 +188,7 @@ export const ticketRouter = createTRPCRouter({
           addValue: b2Id,
         });
       }
+      await ctx.db.insert(tickets).values(newTicket);
     }),
   update: protectedProcedure
     .input(updateTicketSchema)
@@ -276,50 +289,86 @@ export const ticketRouter = createTRPCRouter({
   closeTicket: protectedProcedure
     .input(z.object({ ticketId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      const closedTickets = await ctx.db
+      const ticket = await ctx.db.query.tickets.findFirst({
+        where({ id }, { eq }) {
+          return eq(id, input.ticketId);
+        },
+      });
+
+      if (ticket) {
+        const clickUpConfig = await getUserConfigs({ ctx });
+
+        const taskId = getClickupCardId(ticket.card);
+        const response = await fetch(
+          `https://api.clickup.com/api/v2/task/${taskId}`,
+          {
+            method: "PUT",
+            headers: {
+              accept: "application/json",
+              "content-type": "application/json",
+              Authorization: clickUpConfig.decriptedToken,
+            },
+            body: JSON.stringify({ status: "fechado" }),
+          },
+        );
+
+        if (response.ok === false) {
+          const erro = await getErrorFromClickupApi(response);
+
+          throw createError({
+            code: "PRECONDITION_FAILED",
+            message: `Erro ao tentar fechar o card. \n\nDetalhes: ${erro.err}`,
+          });
+        }
+      }
+
+      return await ctx.db
         .update(tickets)
         .set({ isClosed: true })
         .where(eq(tickets.id, input.ticketId))
         .returning();
-
-      if (closedTickets[0]) {
-        const clickUpConfig = await getUserConfigs({ ctx });
-
-        const taskId = getClickupCardId(closedTickets[0].card);
-        await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
-          method: "PUT",
-          headers: {
-            accept: "application/json",
-            "content-type": "application/json",
-            Authorization: clickUpConfig.decriptedToken,
-          },
-          body: JSON.stringify({ status: "fechado" }),
-        });
-      }
     }),
   reopenTicket: protectedProcedure
     .input(z.object({ ticketId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      const reopenedTickets = await ctx.db
+      const ticket = await ctx.db.query.tickets.findFirst({
+        where({ id }, { eq }) {
+          return eq(id, input.ticketId);
+        },
+      });
+
+      if (ticket) {
+        const taskId = getClickupCardId(ticket.card);
+        const clickUpConfig = await getUserConfigs({ ctx });
+
+        const response = await fetch(
+          `https://api.clickup.com/api/v2/task/${taskId}`,
+          {
+            method: "PUT",
+            headers: {
+              accept: "application/json",
+              "content-type": "application/json",
+              Authorization: clickUpConfig.decriptedToken,
+            },
+            body: JSON.stringify({ status: "aberto" }),
+          },
+        );
+
+        if (response.ok === false) {
+          const erro = await getErrorFromClickupApi(response);
+
+          throw createError({
+            code: "PRECONDITION_FAILED",
+            message: `Erro ao tentar reabrir o card. \n\nDetalhes: ${erro.err}`,
+          });
+        }
+      }
+
+      return ctx.db
         .update(tickets)
         .set({ isClosed: false })
         .where(eq(tickets.id, input.ticketId))
         .returning();
-
-      if (reopenedTickets[0]) {
-        const taskId = getClickupCardId(reopenedTickets[0].card);
-        const clickUpConfig = await getUserConfigs({ ctx });
-
-        await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
-          method: "PUT",
-          headers: {
-            accept: "application/json",
-            "content-type": "application/json",
-            Authorization: clickUpConfig.decriptedToken,
-          },
-          body: JSON.stringify({ status: "aberto" }),
-        });
-      }
     }),
   remove: protectedProcedure
     .input(z.object({ ticketId: z.number() }))
