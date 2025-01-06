@@ -17,7 +17,6 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
-    CLICKUP_PERSONAL_TOKEN_API: z.string(),
     CLICK_UP_TOKEN_ENCRYPTION_KEY: z.string(),
     CLICK_UP_TOKEN_ENCRYPTION_SALT: z.string(),
     COMPANY: z.string(),
@@ -43,7 +42,6 @@ export const env = createEnv({
     AUTH_DISCORD_SECRET: process.env.AUTH_DISCORD_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
-    CLICKUP_PERSONAL_TOKEN_API: process.env.CLICKUP_PERSONAL_TOKEN_API,
     CLICK_UP_TOKEN_ENCRYPTION_KEY: process.env.CLICK_UP_TOKEN_ENCRYPTION_KEY,
     CLICK_UP_TOKEN_ENCRYPTION_SALT: process.env.CLICK_UP_TOKEN_ENCRYPTION_SALT,
     COMPANY: process.env.COMPANY,
