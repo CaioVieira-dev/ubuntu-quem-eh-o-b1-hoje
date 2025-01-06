@@ -21,6 +21,7 @@ export const env = createEnv({
     CLICK_UP_TOKEN_ENCRYPTION_KEY: z.string(),
     CLICK_UP_TOKEN_ENCRYPTION_SALT: z.string(),
     COMPANY: z.string(),
+    VERCEL_URL: z.string().optional(),
   },
 
   /**
@@ -46,6 +47,7 @@ export const env = createEnv({
     CLICK_UP_TOKEN_ENCRYPTION_KEY: process.env.CLICK_UP_TOKEN_ENCRYPTION_KEY,
     CLICK_UP_TOKEN_ENCRYPTION_SALT: process.env.CLICK_UP_TOKEN_ENCRYPTION_SALT,
     COMPANY: process.env.COMPANY,
+    VERCEL_URL: process.env.VERCEL_URL,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
