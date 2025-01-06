@@ -23,7 +23,7 @@ export default async function Home() {
               </p>
               {session && (
                 <Link
-                  href={`/${env.COMPANY}`}
+                  href={`/companies/${env.COMPANY}`}
                   className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
                 >
                   Ir para lista
@@ -33,7 +33,7 @@ export default async function Home() {
                 href={
                   session
                     ? "/api/auth/signout"
-                    : `/api/auth/signin?callbackUrl=${encodeURI(`http://localhost:3000/${env.COMPANY}`)}`
+                    : `/api/auth/signin?callbackUrl=${encodeURI(`http://${env?.VERCEL_URL ? env.VERCEL_URL : "localhost:3000"}/companies/${env.COMPANY}`)}`
                 }
                 className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
               >
