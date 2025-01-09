@@ -72,7 +72,7 @@ export default function Company() {
             type="button"
             variant="ghost"
             size={"icon"}
-            className=""
+            title="Popular usuários do ClickUp"
           >
             <FaUserPlus />
           </Button>

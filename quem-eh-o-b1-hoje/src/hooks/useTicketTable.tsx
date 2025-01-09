@@ -337,6 +337,7 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
               variant={"ghost"}
               onClick={() => saveChanges(row.original.ticketId)}
               disabled={isSaving}
+              title="Salvar"
             >
               <FaSave />
             </Button>
@@ -345,6 +346,7 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
               variant={"ghost"}
               onClick={() => cancelEditing(row.original.ticketId)}
               disabled={isSaving}
+              title="Cancelar"
             >
               <FaArrowLeft />
             </Button>
@@ -355,6 +357,7 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
               onClick={() => startEditing(row.original.ticketId)}
               size={"icon"}
               variant={"ghost"}
+              title="Editar"
             >
               <FaPencil />
             </Button>
@@ -364,6 +367,7 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
                 variant={"ghost"}
                 onClick={() => updateTicketName(row.original.ticketId)}
                 disabled={isSaving}
+                title="Sincronizar nome"
               >
                 <FaSync />
               </Button>
@@ -374,6 +378,7 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
                 variant={"ghost"}
                 onClick={() => reopenTicket(row.original.ticketId)}
                 disabled={isSaving}
+                title="Reabrir"
               >
                 <FaUndoAlt />
               </Button>
@@ -383,6 +388,7 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
                 variant={"ghost"}
                 onClick={() => closeTicket(row.original.ticketId)}
                 disabled={isSaving}
+                title="Fechar"
               >
                 <FaCheckDouble />
               </Button>
@@ -392,6 +398,7 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
               variant={"ghost"}
               onClick={() => removeTicket(row.original.ticketId)}
               disabled={isSaving}
+              title="Excluir"
             >
               <FaTrash />
             </Button>
