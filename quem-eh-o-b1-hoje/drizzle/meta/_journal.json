@@ -8,6 +8,13 @@
       "when": 1736201731010,
       "tag": "0000_brief_rawhide_kid",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1736385230245,
+      "tag": "0001_lean_ken_ellis",
+      "breakpoints": true
     }
   ]
 }
