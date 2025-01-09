@@ -1,7 +1,10 @@
 "use client";
 import { type CheckedState } from "@radix-ui/react-checkbox";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback } from "react";
+import { FaArrowLeft, FaUserPlus } from "react-icons/fa6";
+import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import {
   Table,
@@ -11,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { showErrorToast } from "~/lib/toasts-helpers";
+import { showErrorToast, showSuccessToast } from "~/lib/toasts-helpers";
 import { api } from "~/trpc/react";
 
 export default function Company() {
@@ -21,6 +24,13 @@ export default function Company() {
   const { mutate: updateUser, isPending } = api.user.updateUser.useMutation({
     async onSuccess() {
       await utils.user.invalidate();
+    },
+    onError: showErrorToast,
+  });
+  const { mutate: populateUsers } = api.user.populateClickupUsers.useMutation({
+    onSuccess() {
+      showSuccessToast("Usuários salvos com sucesso");
+      return;
     },
     onError: showErrorToast,
   });
@@ -45,12 +55,27 @@ export default function Company() {
 
   return (
     <div className="container flex max-w-6xl flex-col items-center justify-center gap-12 px-4 py-16">
-      <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
+      <h1 className="flex w-full items-center gap-2 text-5xl font-extrabold tracking-tight sm:text-[5rem]">
+        <Link
+          href={`/companies/${params.company}`}
+          className="rounded-xl p-2 transition-colors hover:bg-white hover:text-primary"
+        >
+          <FaArrowLeft />
+        </Link>
         {`Configurações da lista de B1 do ${params.company}`}
       </h1>
       <div className="flex w-full flex-col gap-2">
-        <h3 className="flex w-full justify-center text-xl font-extrabold tracking-tight sm:text-[2rem]">
+        <h3 className="flex w-full items-center justify-center gap-2 text-xl font-extrabold tracking-tight sm:text-[2rem]">
           Usuários encontrados
+          <Button
+            onClick={() => populateUsers()}
+            type="button"
+            variant="ghost"
+            size={"icon"}
+            className=""
+          >
+            <FaUserPlus />
+          </Button>
         </h3>
         <Table>
           <TableHeader>
