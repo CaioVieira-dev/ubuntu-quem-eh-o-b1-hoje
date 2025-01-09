@@ -1,10 +1,17 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaCogs, FaSave } from "react-icons/fa";
-import { FaRegEye, FaRegEyeSlash, FaUserPlus } from "react-icons/fa6";
+import {
+  FaArrowRight,
+  FaRegEye,
+  FaRegEyeSlash,
+  FaUserPlus,
+} from "react-icons/fa6";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import {
@@ -41,7 +48,9 @@ const formSchema = z.object({
 });
 
 export function Configs({ userId }: { userId: string }) {
+  const params = useParams<{ company: string }>();
   const utils = api.useUtils();
+
   const [showToken, setShowToken] = useState(false);
   const [userConfig] = api.clickUpConfig.get.useSuspenseQuery();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -69,12 +78,6 @@ export function Configs({ userId }: { userId: string }) {
         ticketListId: data?.ticketListId ?? ("" as unknown as bigint),
         clickUpUserToken: "",
       });
-    },
-  });
-  const { mutate: populateUsers } = api.user.populateClickupUsers.useMutation({
-    onSuccess() {
-      showSuccessToast("Usuários salvos com sucesso");
-      return;
     },
   });
 
@@ -227,20 +230,15 @@ export function Configs({ userId }: { userId: string }) {
         </Form>
 
         <div className="flex flex-col gap-2 border-t-2 py-4">
-          <h4>Configurações do app:</h4>
+          <Link
+            href={`/companies/${params.company}/configurations`}
+            className="flex items-center justify-center gap-2 rounded-md bg-white p-2 text-primary transition-colors hover:bg-white/80"
+          >
+            Outras configurações <FaArrowRight />
+          </Link>
+        </div>
+        <div className="flex flex-col gap-2 border-t-2 py-4">
           <InviteForm />
-
-          <div className="flex flex-col gap-2">
-            Faltou alguem na lista de B1?
-            <Button
-              onClick={() => populateUsers()}
-              type="button"
-              variant="secondary"
-              className="w-full"
-            >
-              Popular usuarios do ClickUp
-            </Button>
-          </div>
         </div>
       </SheetContent>
     </Sheet>

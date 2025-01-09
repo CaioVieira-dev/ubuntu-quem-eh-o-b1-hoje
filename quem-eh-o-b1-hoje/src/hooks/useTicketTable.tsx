@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { FaArrowLeft, FaCheckDouble, FaPencil, FaTrash } from "react-icons/fa6";
 import { FaSave, FaSync, FaUndoAlt } from "react-icons/fa";
 
@@ -40,6 +40,14 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
   const totalPages = Math.ceil((activeTickets?.total ?? 0) / pageSize);
 
   const [users] = api.user.getUsers.useSuspenseQuery();
+  const possibleB1Users = useMemo(
+    () => users.filter((user) => user.canBeB1),
+    [users],
+  );
+  const possibleB2Users = useMemo(
+    () => users.filter((user) => user.canBeB2),
+    [users],
+  );
   const { mutate: update, isPending: isUpdatingTicket } =
     api.ticket.update.useMutation({
       async onSuccess() {
@@ -249,7 +257,7 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
                   <span className="w-100 p-3"></span>
                 </SelectItem>
 
-                {users.map(({ id, name }) => (
+                {possibleB1Users.map(({ id, name }) => (
                   <SelectItem key={id} value={`${id}`}>
                     {name}
                   </SelectItem>
@@ -297,7 +305,7 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
                   <span className="w-100 p-3"></span>
                 </SelectItem>
 
-                {users.map(({ id, name }) => (
+                {possibleB2Users.map(({ id, name }) => (
                   <SelectItem key={id} value={`${id}`}>
                     {name}
                   </SelectItem>
@@ -329,6 +337,7 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
               variant={"ghost"}
               onClick={() => saveChanges(row.original.ticketId)}
               disabled={isSaving}
+              title="Salvar"
             >
               <FaSave />
             </Button>
@@ -337,6 +346,7 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
               variant={"ghost"}
               onClick={() => cancelEditing(row.original.ticketId)}
               disabled={isSaving}
+              title="Cancelar"
             >
               <FaArrowLeft />
             </Button>
@@ -347,6 +357,7 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
               onClick={() => startEditing(row.original.ticketId)}
               size={"icon"}
               variant={"ghost"}
+              title="Editar"
             >
               <FaPencil />
             </Button>
@@ -356,6 +367,7 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
                 variant={"ghost"}
                 onClick={() => updateTicketName(row.original.ticketId)}
                 disabled={isSaving}
+                title="Sincronizar nome"
               >
                 <FaSync />
               </Button>
@@ -366,6 +378,7 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
                 variant={"ghost"}
                 onClick={() => reopenTicket(row.original.ticketId)}
                 disabled={isSaving}
+                title="Reabrir"
               >
                 <FaUndoAlt />
               </Button>
@@ -375,6 +388,7 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
                 variant={"ghost"}
                 onClick={() => closeTicket(row.original.ticketId)}
                 disabled={isSaving}
+                title="Fechar"
               >
                 <FaCheckDouble />
               </Button>
@@ -384,6 +398,7 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
               variant={"ghost"}
               onClick={() => removeTicket(row.original.ticketId)}
               disabled={isSaving}
+              title="Excluir"
             >
               <FaTrash />
             </Button>

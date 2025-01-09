@@ -2,6 +2,7 @@ import { aliasedTable, asc, count, eq, max, sql } from "drizzle-orm";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { clickUpUser, tickets } from "~/server/db/schema";
 import { getUserConfigs } from "./clickUpConfig";
+import { z } from "zod";
 
 export const userRouter = createTRPCRouter({
   getUsers: protectedProcedure.query(async ({ ctx }) => {
@@ -9,13 +10,55 @@ export const userRouter = createTRPCRouter({
       .select({
         name: clickUpUser.username,
         id: clickUpUser.id,
+        canBeB1: clickUpUser.canBeB1,
+        canBeB2: clickUpUser.canBeB2,
+        isListed: clickUpUser.isListed,
       })
-      .from(clickUpUser);
+      .from(clickUpUser)
+      .orderBy(asc(clickUpUser.username));
 
-    return possibleUsers.map(({ id, name }) => {
-      return { name: name ?? "sem nome", id };
+    return possibleUsers.map(({ id, name, canBeB1, canBeB2, isListed }) => {
+      return {
+        name: name ?? "sem nome",
+        id,
+        canBeB1: Boolean(canBeB1),
+        canBeB2: Boolean(canBeB2),
+        isListed: Boolean(isListed),
+      };
     });
   }),
+  updateUser: protectedProcedure
+    .input(
+      z.object({
+        canBeB1: z.boolean().optional(),
+        canBeB2: z.boolean().optional(),
+        isListed: z.boolean().optional(),
+        id: z.number(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { canBeB1, canBeB2, isListed, id } = input;
+
+      const update: {
+        canBeB1?: boolean;
+        canBeB2?: boolean;
+        isListed?: boolean;
+      } = {};
+      if (canBeB1 !== undefined) {
+        update.canBeB1 = canBeB1;
+      }
+      if (canBeB2 !== undefined) {
+        update.canBeB2 = canBeB2;
+      }
+      if (isListed !== undefined) {
+        update.isListed = isListed;
+      }
+
+      await ctx.db
+        .update(clickUpUser)
+        .set(update)
+        .where(eq(clickUpUser.id, id));
+    }),
   getLastTimeInTicketAsB1AndB2: protectedProcedure.query(async ({ ctx }) => {
     const b1Ticket = aliasedTable(tickets, "b1Ticket");
     const b2Ticket = aliasedTable(tickets, "b2Ticket");
@@ -55,6 +98,7 @@ export const userRouter = createTRPCRouter({
         timesAsB2: maxB2DateTicket.timesAsB2,
       })
       .from(clickUpUser)
+      .where(eq(clickUpUser.isListed, true))
       .leftJoin(maxB1DateTicket, eq(maxB1DateTicket.b1Id, clickUpUser.id))
       .leftJoin(maxB2DateTicket, eq(maxB2DateTicket.b2Id, clickUpUser.id))
       .orderBy(

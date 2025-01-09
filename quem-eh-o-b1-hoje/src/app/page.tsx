@@ -32,7 +32,7 @@ export default async function Home() {
               <Link
                 href={
                   session
-                    ? "/api/auth/signout"
+                    ? `/api/auth/signout?callbackUrl=${encodeURI(`http://${env?.VERCEL_URL ? env.VERCEL_URL : "localhost:3000"}/`)}`
                     : `/api/auth/signin?callbackUrl=${encodeURI(`http://${env?.VERCEL_URL ? env.VERCEL_URL : "localhost:3000"}/companies/${env.COMPANY}`)}`
                 }
                 className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
