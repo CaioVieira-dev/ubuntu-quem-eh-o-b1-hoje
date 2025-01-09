@@ -15,7 +15,7 @@ import {
 } from "~/components/ui/select";
 import { SelectValue } from "@radix-ui/react-select";
 import { Button } from "~/components/ui/button";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { api } from "~/trpc/react";
 import { showErrorToast, showSuccessToast } from "~/lib/toasts-helpers";
@@ -47,7 +47,14 @@ export function CreateTicketForm() {
   const utils = api.useUtils();
 
   const [users] = api.user.getUsers.useSuspenseQuery();
-
+  const possibleB1Users = useMemo(
+    () => users.filter((user) => user.canBeB1),
+    [users],
+  );
+  const possibleB2Users = useMemo(
+    () => users.filter((user) => user.canBeB2),
+    [users],
+  );
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -120,7 +127,7 @@ export function CreateTicketForm() {
                             <span className="w-100 p-3"></span>
                           </SelectItem>
 
-                          {users.map(({ id, name }) => (
+                          {possibleB1Users.map(({ id, name }) => (
                             <SelectItem key={id} value={`${id}`}>
                               {name}
                             </SelectItem>
@@ -152,7 +159,7 @@ export function CreateTicketForm() {
                           <SelectItem key={-1} value={"null"}>
                             <span className="w-100 p-3"></span>
                           </SelectItem>
-                          {users.map(({ id, name }) => (
+                          {possibleB2Users.map(({ id, name }) => (
                             <SelectItem key={id} value={`${id}`}>
                               {name}
                             </SelectItem>
