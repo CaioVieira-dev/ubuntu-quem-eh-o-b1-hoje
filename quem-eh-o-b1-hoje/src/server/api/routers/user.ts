@@ -98,6 +98,7 @@ export const userRouter = createTRPCRouter({
         timesAsB2: maxB2DateTicket.timesAsB2,
       })
       .from(clickUpUser)
+      .where(eq(clickUpUser.isListed, true))
       .leftJoin(maxB1DateTicket, eq(maxB1DateTicket.b1Id, clickUpUser.id))
       .leftJoin(maxB2DateTicket, eq(maxB2DateTicket.b2Id, clickUpUser.id))
       .orderBy(

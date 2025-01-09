@@ -48,67 +48,73 @@ export default function Company() {
       <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
         {`Configurações da lista de B1 do ${params.company}`}
       </h1>
-      <h2>Usuarios encontrado</h2>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead colSpan={2}>Nome</TableHead>
-            <TableHead className="text-center">Está na lista de B1?</TableHead>
-            <TableHead className="text-center">Pode ser B1</TableHead>
-            <TableHead className="text-center">Pode ser B2</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users?.map?.(({ id, name, canBeB1, canBeB2, isListed }) => (
-            <TableRow key={id}>
-              <TableCell>AV </TableCell>
-              <TableCell>{name}</TableCell>
-              <TableCell className="text-center">
-                <Checkbox
-                  className="border-white"
-                  checked={isListed}
-                  onCheckedChange={(value) =>
-                    updateClickupUser({
-                      id,
-                      field: "isListed",
-                      value: getValueFromCheckedState(value),
-                    })
-                  }
-                  disabled={isPending}
-                />
-              </TableCell>
-              <TableCell className="text-center">
-                <Checkbox
-                  className="border-white"
-                  checked={canBeB1}
-                  onCheckedChange={(value) =>
-                    updateClickupUser({
-                      id,
-                      field: "canBeB1",
-                      value: getValueFromCheckedState(value),
-                    })
-                  }
-                  disabled={isPending}
-                />
-              </TableCell>
-              <TableCell className="text-center">
-                <Checkbox
-                  className="border-white"
-                  checked={canBeB2}
-                  onCheckedChange={(value) =>
-                    updateClickupUser({
-                      id,
-                      field: "canBeB2",
-                      value: getValueFromCheckedState(value),
-                    })
-                  }
-                  disabled={isPending}
-                />
-              </TableCell>
+      <div className="flex w-full flex-col gap-2">
+        <h3 className="flex w-full justify-center text-xl font-extrabold tracking-tight sm:text-[2rem]">
+          Usuários encontrados
+        </h3>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead colSpan={2}>Nome</TableHead>
+              <TableHead className="text-center">
+                Está na lista de B1?
+              </TableHead>
+              <TableHead className="text-center">Pode ser B1</TableHead>
+              <TableHead className="text-center">Pode ser B2</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {users?.map?.(({ id, name, canBeB1, canBeB2, isListed }) => (
+              <TableRow key={id}>
+                <TableCell>AV </TableCell>
+                <TableCell>{name}</TableCell>
+                <TableCell className="text-center">
+                  <Checkbox
+                    className="border-white"
+                    checked={isListed}
+                    onCheckedChange={(value) =>
+                      updateClickupUser({
+                        id,
+                        field: "isListed",
+                        value: getValueFromCheckedState(value),
+                      })
+                    }
+                    disabled={isPending}
+                  />
+                </TableCell>
+                <TableCell className="text-center">
+                  <Checkbox
+                    className="border-white"
+                    checked={canBeB1}
+                    onCheckedChange={(value) =>
+                      updateClickupUser({
+                        id,
+                        field: "canBeB1",
+                        value: getValueFromCheckedState(value),
+                      })
+                    }
+                    disabled={isPending}
+                  />
+                </TableCell>
+                <TableCell className="text-center">
+                  <Checkbox
+                    className="border-white"
+                    checked={canBeB2}
+                    onCheckedChange={(value) =>
+                      updateClickupUser({
+                        id,
+                        field: "canBeB2",
+                        value: getValueFromCheckedState(value),
+                      })
+                    }
+                    disabled={isPending}
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
