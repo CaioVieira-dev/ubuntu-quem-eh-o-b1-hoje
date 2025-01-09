@@ -176,6 +176,9 @@ export const clickUpUser = createTable("click_up_user", {
   username: varchar("username", { length: 255 }),
   email: varchar("email", { length: 255 }).notNull(),
   profilePicture: varchar("profile_picture", { length: 255 }),
+  canBeB1: boolean("can_be_b1"),
+  canBeB2: boolean("can_be_b2"),
+  isListed: boolean("is_listed"),
 });
 
 export const clickUpUsersRelations = relations(
