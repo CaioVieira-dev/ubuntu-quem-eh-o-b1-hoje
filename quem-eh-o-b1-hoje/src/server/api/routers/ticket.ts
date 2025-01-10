@@ -11,6 +11,7 @@ const createTicketSchema = z.object({
   card: z.string(),
   b1Id: z.number().optional().nullable(),
   b2Id: z.number().optional().nullable(),
+  shouldCreateALinkedCard: z.boolean().optional(),
 });
 const updateTicketSchema = createTicketSchema.and(
   z.object({ ticketId: z.number() }),
@@ -128,7 +129,7 @@ export const ticketRouter = createTRPCRouter({
   create: protectedProcedure
     .input(createTicketSchema)
     .mutation(async ({ ctx, input }) => {
-      const { card, b1Id, b2Id } = input;
+      const { card, b1Id, b2Id, shouldCreateALinkedCard } = input;
 
       const clickUpConfig = await getUserConfigs({ ctx });
       const cardId = getClickupCardId(card);
@@ -155,12 +156,56 @@ export const ticketRouter = createTRPCRouter({
         createdById: string;
         company: string;
         cardName: string;
+        linkedCard?: string;
       } = {
         createdById: ctx.session.user.id,
         card,
         company: env.COMPANY,
         cardName,
       };
+
+      if (shouldCreateALinkedCard) {
+        if (!clickUpConfig?.linkedTicketListId) {
+          throw createError({
+            code: "PRECONDITION_FAILED",
+            message:
+              "Configuração do identificador da lista de cards linkado não encontrada. Adicione o identificador nas configurações e tente novamente",
+          });
+        }
+        const { url } = (await fetch(
+          `https://api.clickup.com/api/v2/list/${clickUpConfig.linkedTicketListId}/task`,
+          {
+            method: "POST",
+            headers: {
+              accept: "application/json",
+              "content-type": "application/json",
+              Authorization: clickUpConfig.decriptedToken,
+            },
+            body: JSON.stringify({
+              name: cardName,
+            }),
+          },
+        ).then(async (response): Promise<unknown> => {
+          if (response.ok === false) {
+            const erro = await getErrorFromClickupApi(response);
+            throw createError({
+              code: "PRECONDITION_FAILED",
+              message: `Erro ao tentar buscar o criar card linkado no clickup. \n\nDetalhes: ${erro.err}`,
+            });
+          }
+
+          return response.json();
+        })) as { url?: string };
+
+        if (!url) {
+          throw createError({
+            code: "PRECONDITION_FAILED",
+            message: `Erro ao criar card linkado no clickup. \n\nDetalhes: Não recebemos a url do novo card`,
+          });
+        }
+
+        newTicket.linkedCard = url;
+      }
 
       newTicket.b1Id = b1Id;
       if (b1Id) {
@@ -188,6 +233,7 @@ export const ticketRouter = createTRPCRouter({
           addValue: b2Id,
         });
       }
+
       await ctx.db.insert(tickets).values(newTicket);
     }),
   update: protectedProcedure

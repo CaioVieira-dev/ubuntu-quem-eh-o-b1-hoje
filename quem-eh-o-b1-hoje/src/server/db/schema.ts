@@ -122,6 +122,7 @@ export const tickets = createTable(
     id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
     card: varchar("card", { length: 256 }).notNull(),
     cardName: text("card_name").notNull(),
+    linkedCard: varchar("linked_card", { length: 256 }),
     createdById: varchar("created_by", { length: 255 })
       .notNull()
       .references(() => users.id),
@@ -202,6 +203,7 @@ export const clickUpConfigs = createTable("click_up_config", {
     withTimezone: true,
   }).$onUpdate(() => new Date()),
   ticketListId: bigint("ticket_list_id", { mode: "bigint" }),
+  linkedTicketListId: bigint("linked_ticket_list_id", { mode: "bigint" }),
   b1FieldUuid: varchar("b1_field_uuid", { length: 255 }),
   b2FieldUuid: varchar("b2_field_uuid", { length: 255 }),
   openLabel: varchar("open_label", { length: 255 }),

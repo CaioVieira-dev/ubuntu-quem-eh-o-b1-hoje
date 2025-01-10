@@ -12,6 +12,7 @@ const updateClickUpConfigSchema = z.object({
   userId: z.string(),
   clickUpUserToken: z.string().optional(),
   ticketListId: z.bigint().optional(),
+  linkedTicketListId: z.bigint().optional(),
   b1FieldUuid: z.string().optional(),
   b2FieldUuid: z.string().optional(),
   openLabel: z.string().optional(),
@@ -42,6 +43,7 @@ export const getUserConfigs = async ({
       encryptedToken: clickUpConfigs.clickUpUserToken,
       openLabel: clickUpConfigs.openLabel,
       closedlabel: clickUpConfigs.closedLabel,
+      linkedTicketListId: clickUpConfigs.linkedTicketListId,
     })
     .from(clickUpConfigs)
     .where(eq(clickUpConfigs.userId, ctx.session.user.id));
@@ -108,6 +110,7 @@ export const getUserConfigs = async ({
     listId: clickUpConfig.ticketListId,
     openLabel: clickUpConfig.openLabel,
     closedlabel: clickUpConfig.closedlabel,
+    linkedTicketListId: clickUpConfig.linkedTicketListId,
   };
 };
 
@@ -128,6 +131,7 @@ export const clickUpConfigRouter = createTRPCRouter({
         b2FieldUuid,
         clickUpUserToken,
         ticketListId,
+        linkedTicketListId,
         closedLabel,
         openLabel,
       } = input;
@@ -139,6 +143,7 @@ export const clickUpConfigRouter = createTRPCRouter({
         b1FieldUuid,
         b2FieldUuid,
         ticketListId,
+        linkedTicketListId,
         closedLabel,
         openLabel,
       };
@@ -167,6 +172,7 @@ export const clickUpConfigRouter = createTRPCRouter({
         encriptedToken: clickUpConfigs.clickUpUserToken,
         openLabel: clickUpConfigs.openLabel,
         closedLabel: clickUpConfigs.closedLabel,
+        linkedTicketListId: clickUpConfigs.linkedTicketListId,
       })
       .from(clickUpConfigs)
       .where(eq(clickUpConfigs.userId, ctx.session.user.id));
@@ -175,6 +181,7 @@ export const clickUpConfigRouter = createTRPCRouter({
       B1UUID: clickUpConfig?.B1UUID,
       B2UUID: clickUpConfig?.B2UUID,
       ticketListId: clickUpConfig?.ticketListId,
+      linkedTicketListId: clickUpConfig?.linkedTicketListId,
       tokenUpdatedAt: clickUpConfig?.tokenUpdatedAt,
       tokenIsFiiled: Boolean(clickUpConfig?.encriptedToken),
       openLabel: clickUpConfig?.openLabel,
