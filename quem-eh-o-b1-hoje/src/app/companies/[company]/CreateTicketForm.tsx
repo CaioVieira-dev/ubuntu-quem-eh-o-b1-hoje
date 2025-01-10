@@ -1,7 +1,13 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { Form, FormControl, FormField, FormItem } from "~/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,10 +21,11 @@ import {
 } from "~/components/ui/select";
 import { SelectValue } from "@radix-ui/react-select";
 import { Button } from "~/components/ui/button";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { api } from "~/trpc/react";
 import { showErrorToast, showSuccessToast } from "~/lib/toasts-helpers";
+import { Checkbox } from "~/components/ui/checkbox";
 
 const formSchema = z.object({
   card: z.string(),
@@ -40,6 +47,7 @@ const formSchema = z.object({
     }
     return val;
   }, z.number().optional().nullable()),
+  shouldCreateALinkedCard: z.boolean(),
 });
 
 export function CreateTicketForm() {
@@ -47,11 +55,19 @@ export function CreateTicketForm() {
   const utils = api.useUtils();
 
   const [users] = api.user.getUsers.useSuspenseQuery();
-
+  const possibleB1Users = useMemo(
+    () => users.filter((user) => user.canBeB1),
+    [users],
+  );
+  const possibleB2Users = useMemo(
+    () => users.filter((user) => user.canBeB2),
+    [users],
+  );
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       card: "",
+      shouldCreateALinkedCard: false,
     },
   });
 
@@ -81,22 +97,43 @@ export function CreateTicketForm() {
           <TableBody>
             <TableRow key={"new-ticket"} className="hover:bg-transparent">
               <TableCell colSpan={3}>
-                <FormField
-                  name="card"
-                  control={form.control}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          placeholder="Preencha o link do card"
-                          required
-                          disabled={isCreatingTicket}
-                          {...field}
-                        ></Input>
-                      </FormControl>
-                    </FormItem>
-                  )}
-                ></FormField>
+                <div className="flex gap-2">
+                  <FormField
+                    name="card"
+                    control={form.control}
+                    render={({ field }) => (
+                      <FormItem className="w-full">
+                        <FormControl>
+                          <Input
+                            placeholder="Preencha o link do card"
+                            required
+                            disabled={isCreatingTicket}
+                            {...field}
+                          ></Input>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  ></FormField>
+                  <FormField
+                    name="shouldCreateALinkedCard"
+                    control={form.control}
+                    render={({ field }) => (
+                      <FormItem className="flex items-center gap-2">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            disabled={isCreatingTicket}
+                            className="h-9 w-9 border-white"
+                          ></Checkbox>
+                        </FormControl>
+                        <FormLabel className="!mt-0 hover:cursor-pointer">
+                          Criar card na outra lista?
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  ></FormField>
+                </div>
               </TableCell>
               <TableCell>
                 <FormField
@@ -120,7 +157,7 @@ export function CreateTicketForm() {
                             <span className="w-100 p-3"></span>
                           </SelectItem>
 
-                          {users.map(({ id, name }) => (
+                          {possibleB1Users.map(({ id, name }) => (
                             <SelectItem key={id} value={`${id}`}>
                               {name}
                             </SelectItem>
@@ -152,7 +189,7 @@ export function CreateTicketForm() {
                           <SelectItem key={-1} value={"null"}>
                             <span className="w-100 p-3"></span>
                           </SelectItem>
-                          {users.map(({ id, name }) => (
+                          {possibleB2Users.map(({ id, name }) => (
                             <SelectItem key={id} value={`${id}`}>
                               {name}
                             </SelectItem>

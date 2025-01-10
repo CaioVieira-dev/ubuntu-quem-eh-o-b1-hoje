@@ -176,7 +176,6 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
       ...prev,
       [id]: { ...prev[id], [field]: value },
     }));
-    console.log("tempdata", tempData);
   };
 
   const updateTicketName = useCallback(
@@ -239,8 +238,6 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
             <Select
               value={`${value}`}
               onValueChange={(newValue) => {
-                console.log(newValue);
-                console.log("users", users);
                 updateTempData(
                   row.original.ticketId,
                   "b1",

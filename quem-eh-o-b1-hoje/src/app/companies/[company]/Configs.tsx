@@ -41,6 +41,9 @@ const formSchema = z.object({
   ticketListId: z
     .bigint()
     .refine((val) => val > 0n, "O valor precisa ser positivo."),
+  linkedTicketListId: z
+    .bigint()
+    .refine((val) => val > 0n, "O valor precisa ser positivo."),
   b1FieldUuid: z.string().optional(),
   b2FieldUuid: z.string().optional(),
   openLabel: z.string().optional(),
@@ -62,6 +65,8 @@ export function Configs({ userId }: { userId: string }) {
       openLabel: userConfig.openLabel ?? "",
       closedLabel: userConfig.closedLabel ?? "",
       ticketListId: userConfig.ticketListId ?? ("" as unknown as bigint),
+      linkedTicketListId:
+        userConfig.linkedTicketListId ?? ("" as unknown as bigint),
       clickUpUserToken: "",
     },
   });
@@ -76,6 +81,8 @@ export function Configs({ userId }: { userId: string }) {
         closedLabel: data?.closedLabel ?? "",
         openLabel: data?.openLabel ?? "",
         ticketListId: data?.ticketListId ?? ("" as unknown as bigint),
+        linkedTicketListId:
+          data?.linkedTicketListId ?? ("" as unknown as bigint),
         clickUpUserToken: "",
       });
     },
@@ -219,6 +226,31 @@ export function Configs({ userId }: { userId: string }) {
                   <FormControl>
                     <Input {...field}></Input>
                   </FormControl>
+                </FormItem>
+              )}
+            ></FormField>
+            <FormField
+              name="linkedTicketListId"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Id de uma lista de cards secundaria:</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="text"
+                      value={field?.value?.toString?.() ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(value ? BigInt(value) : 0n); // Convert to to BigInt
+                      }}
+                    ></Input>
+                  </FormControl>
+                  <FormDescription>
+                    Lista secundaria onde cards podem ser criados no ClickUp ao
+                    adicionar um card neste app.
+                  </FormDescription>
+                  <FormMessage />
                 </FormItem>
               )}
             ></FormField>
