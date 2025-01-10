@@ -15,6 +15,13 @@
       "when": 1736385230245,
       "tag": "0001_lean_ken_ellis",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1736471160919,
+      "tag": "0002_hesitant_captain_cross",
+      "breakpoints": true
     }
   ]
 }
