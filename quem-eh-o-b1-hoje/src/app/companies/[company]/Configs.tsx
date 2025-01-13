@@ -52,6 +52,40 @@ const formSchema = z.object({
 
 export function Configs({ userId }: { userId: string }) {
   const params = useParams<{ company: string }>();
+
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="ghost">
+          <FaCogs />
+        </Button>
+      </SheetTrigger>
+      <SheetContent className="bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
+        <SheetHeader className="mb-4">
+          <SheetTitle className="text-white">
+            Configurações do usuario
+          </SheetTitle>
+          <SheetDescription>Edite suas configurações:</SheetDescription>
+        </SheetHeader>
+
+        <UserConfigForm userId={userId} />
+        <div className="flex flex-col gap-2 border-t-2 py-4">
+          <Link
+            href={`/companies/${params.company}/configurations`}
+            className="flex items-center justify-center gap-2 rounded-md bg-white p-2 text-primary transition-colors hover:bg-white/80"
+          >
+            Outras configurações <FaArrowRight />
+          </Link>
+        </div>
+        <div className="flex flex-col gap-2 border-t-2 py-4">
+          <InviteForm />
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function UserConfigForm({ userId }: { userId: string }) {
   const utils = api.useUtils();
 
   const [showToken, setShowToken] = useState(false);
@@ -96,184 +130,156 @@ export function Configs({ userId }: { userId: string }) {
   );
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="ghost">
-          <FaCogs />
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(submit)}
+        className="mb-4 flex flex-col gap-2"
+      >
+        <FormField
+          name="userId"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Input {...field} type="hidden"></Input>
+              </FormControl>
+            </FormItem>
+          )}
+        ></FormField>
+        <FormField
+          name="clickUpUserToken"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Token da API do ClickUp:</FormLabel>
+              <div className="flex">
+                <FormControl>
+                  <Input
+                    placeholder="Preencha seu token do ClickUp"
+                    type={showToken ? "text" : "password"}
+                    autoComplete="off"
+                    {...field}
+                    className="rounded-e-none"
+                  ></Input>
+                </FormControl>
+                <Button
+                  type="button"
+                  onClick={() => setShowToken(!showToken)}
+                  title={showToken ? "Esconder" : "Mostrar"}
+                  variant="secondary"
+                  className="rounded-s-none"
+                >
+                  {showToken ? <FaRegEyeSlash /> : <FaRegEye />}
+                </Button>
+              </div>
+              <FormDescription>
+                Token encontrado nas configurações do ClickUp.{" "}
+                {userConfig.tokenIsFiiled &&
+                  `Ultima atualização em ${userConfig?.tokenUpdatedAt?.toLocaleDateString() ?? ""}`}
+              </FormDescription>
+            </FormItem>
+          )}
+        ></FormField>
+        <FormField
+          name="ticketListId"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Id da lista dos cards:</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="text"
+                  value={field?.value?.toString?.() ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    field.onChange(value ? BigInt(value) : 0n); // Convert to to BigInt
+                  }}
+                ></Input>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        ></FormField>
+        <FormField
+          name="b1FieldUuid"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Id do campo B1 nos cards:</FormLabel>
+              <FormControl>
+                <Input {...field}></Input>
+              </FormControl>
+            </FormItem>
+          )}
+        ></FormField>
+        <FormField
+          name="b2FieldUuid"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Id do campo B2 nos cards:</FormLabel>
+              <FormControl>
+                <Input {...field}></Input>
+              </FormControl>
+            </FormItem>
+          )}
+        ></FormField>
+        <FormField
+          name="openLabel"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Label para status aberto:</FormLabel>
+              <FormControl>
+                <Input {...field}></Input>
+              </FormControl>
+            </FormItem>
+          )}
+        ></FormField>
+        <FormField
+          name="closedLabel"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Label para status fechado:</FormLabel>
+              <FormControl>
+                <Input {...field}></Input>
+              </FormControl>
+            </FormItem>
+          )}
+        ></FormField>
+        <FormField
+          name="linkedTicketListId"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Id de uma lista de cards secundaria:</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="text"
+                  value={field?.value?.toString?.() ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    field.onChange(value ? BigInt(value) : 0n); // Convert to to BigInt
+                  }}
+                ></Input>
+              </FormControl>
+              <FormDescription>
+                Lista secundaria onde cards podem ser criados no ClickUp ao
+                adicionar um card neste app.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        ></FormField>
+        <Button type="submit" variant={"secondary"}>
+          <FaSave />
+          Salvar
         </Button>
-      </SheetTrigger>
-      <SheetContent className="bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-        <SheetHeader className="mb-4">
-          <SheetTitle className="text-white">
-            Configurações do usuario
-          </SheetTitle>
-          <SheetDescription>Edite suas configurações:</SheetDescription>
-        </SheetHeader>
-
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(submit)}
-            className="mb-4 flex flex-col gap-2"
-          >
-            <FormField
-              name="userId"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input {...field} type="hidden"></Input>
-                  </FormControl>
-                </FormItem>
-              )}
-            ></FormField>
-            <FormField
-              name="clickUpUserToken"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Token da API do ClickUp:</FormLabel>
-                  <div className="flex">
-                    <FormControl>
-                      <Input
-                        placeholder="Preencha seu token do ClickUp"
-                        type={showToken ? "text" : "password"}
-                        autoComplete="off"
-                        {...field}
-                        className="rounded-e-none"
-                      ></Input>
-                    </FormControl>
-                    <Button
-                      type="button"
-                      onClick={() => setShowToken(!showToken)}
-                      title={showToken ? "Esconder" : "Mostrar"}
-                      variant="secondary"
-                      className="rounded-s-none"
-                    >
-                      {showToken ? <FaRegEyeSlash /> : <FaRegEye />}
-                    </Button>
-                  </div>
-                  <FormDescription>
-                    Token encontrado nas configurações do ClickUp.{" "}
-                    {userConfig.tokenIsFiiled &&
-                      `Ultima atualização em ${userConfig?.tokenUpdatedAt?.toLocaleDateString() ?? ""}`}
-                  </FormDescription>
-                </FormItem>
-              )}
-            ></FormField>
-            <FormField
-              name="ticketListId"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Id da lista dos cards:</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="text"
-                      value={field?.value?.toString?.() ?? ""}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        field.onChange(value ? BigInt(value) : 0n); // Convert to to BigInt
-                      }}
-                    ></Input>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            ></FormField>
-            <FormField
-              name="b1FieldUuid"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Id do campo B1 nos cards:</FormLabel>
-                  <FormControl>
-                    <Input {...field}></Input>
-                  </FormControl>
-                </FormItem>
-              )}
-            ></FormField>
-            <FormField
-              name="b2FieldUuid"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Id do campo B2 nos cards:</FormLabel>
-                  <FormControl>
-                    <Input {...field}></Input>
-                  </FormControl>
-                </FormItem>
-              )}
-            ></FormField>
-            <FormField
-              name="openLabel"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Label para status aberto:</FormLabel>
-                  <FormControl>
-                    <Input {...field}></Input>
-                  </FormControl>
-                </FormItem>
-              )}
-            ></FormField>
-            <FormField
-              name="closedLabel"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Label para status fechado:</FormLabel>
-                  <FormControl>
-                    <Input {...field}></Input>
-                  </FormControl>
-                </FormItem>
-              )}
-            ></FormField>
-            <FormField
-              name="linkedTicketListId"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Id de uma lista de cards secundaria:</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="text"
-                      value={field?.value?.toString?.() ?? ""}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        field.onChange(value ? BigInt(value) : 0n); // Convert to to BigInt
-                      }}
-                    ></Input>
-                  </FormControl>
-                  <FormDescription>
-                    Lista secundaria onde cards podem ser criados no ClickUp ao
-                    adicionar um card neste app.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            ></FormField>
-            <Button type="submit" variant={"secondary"}>
-              <FaSave />
-              Salvar
-            </Button>
-          </form>
-        </Form>
-
-        <div className="flex flex-col gap-2 border-t-2 py-4">
-          <Link
-            href={`/companies/${params.company}/configurations`}
-            className="flex items-center justify-center gap-2 rounded-md bg-white p-2 text-primary transition-colors hover:bg-white/80"
-          >
-            Outras configurações <FaArrowRight />
-          </Link>
-        </div>
-        <div className="flex flex-col gap-2 border-t-2 py-4">
-          <InviteForm />
-        </div>
-      </SheetContent>
-    </Sheet>
+      </form>
+    </Form>
   );
 }
 
