@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaCogs, FaSave } from "react-icons/fa";
+import { MdOutlineCloudSync } from "react-icons/md";
 import {
   FaArrowRight,
   FaRegEye,
@@ -52,6 +53,15 @@ const formSchema = z.object({
 
 export function Configs({ userId }: { userId: string }) {
   const params = useParams<{ company: string }>();
+  const utils = api.useUtils();
+  const { mutate: populateTickets, isPending: isPopulatingTickets } =
+    api.ticket.populateTickets.useMutation({
+      async onSuccess() {
+        showSuccessToast("Cards populados com sucesso");
+        await utils.ticket.invalidate();
+      },
+      onError: showErrorToast,
+    });
 
   return (
     <Sheet>
@@ -60,7 +70,7 @@ export function Configs({ userId }: { userId: string }) {
           <FaCogs />
         </Button>
       </SheetTrigger>
-      <SheetContent className="bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
+      <SheetContent className="overflow-y-scroll bg-gradient-to-b from-[#2e026d] to-[#15162c] pb-24 text-white [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gradient-to-b [&::-webkit-scrollbar-track]:from-[#2e026d] [&::-webkit-scrollbar-track]:to-[#15162c] [&::-webkit-scrollbar]:w-2">
         <SheetHeader className="mb-4">
           <SheetTitle className="text-white">
             Configurações do usuario
@@ -76,6 +86,17 @@ export function Configs({ userId }: { userId: string }) {
           >
             Outras configurações <FaArrowRight />
           </Link>
+        </div>
+        <div className="flex flex-col gap-2 border-t-2 py-4">
+          <Button
+            type="button"
+            variant={"secondary"}
+            onClick={() => populateTickets()}
+            disabled={isPopulatingTickets}
+          >
+            <MdOutlineCloudSync />
+            Popular cards
+          </Button>
         </div>
         <div className="flex flex-col gap-2 border-t-2 py-4">
           <InviteForm />
