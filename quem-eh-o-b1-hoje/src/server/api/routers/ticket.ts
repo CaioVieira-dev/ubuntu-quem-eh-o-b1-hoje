@@ -6,6 +6,7 @@ import { clickUpUser, tickets } from "~/server/db/schema";
 import { getUserConfigs, type UserConfigsType } from "./clickUpConfig";
 import { env } from "~/env";
 import { createError } from "~/lib/error-helpers";
+import { getOnConflictDoUpdateSet } from "~/lib/db-helpers";
 
 const createTicketSchema = z.object({
   card: z.string(),
@@ -542,4 +543,121 @@ export const ticketRouter = createTRPCRouter({
         .set({ cardName })
         .where(eq(tickets.id, ticketId));
     }),
+
+  populateTickets: protectedProcedure.mutation(async ({ ctx }) => {
+    const clickUpConfig = await getUserConfigs({ ctx });
+
+    const clickUpTasks = await getAllClickUpTickets({
+      listId: clickUpConfig.listId,
+      token: clickUpConfig.decriptedToken,
+    });
+    if (clickUpTasks.length === 0) {
+      throw createError({
+        code: "PRECONDITION_FAILED",
+        message:
+          "Nenhum card encontrado.\nVerifique as configurações do token pessoal e do identificador da lista, e tente novamente.",
+      });
+    }
+
+    type newTicketType = {
+      b1Id?: number;
+      b2Id?: number;
+      createdById: string;
+      company: string;
+      cardName: string;
+      card: string;
+    };
+
+    const newTickets: newTicketType[] = clickUpTasks.map(
+      ({ name, custom_fields, url }) => {
+        const newTicket: newTicketType = {
+          cardName: name,
+          company: env.COMPANY,
+          createdById: ctx.session.user.id,
+          card: url,
+        };
+
+        for (const field of custom_fields) {
+          if (field.id === clickUpConfig.B1UUID && field.value?.[0]) {
+            newTicket.b1Id = field.value[0].id;
+          } else if (field.id === clickUpConfig.B2UUID && field.value?.[0]) {
+            newTicket.b2Id = field.value[0].id;
+          }
+        }
+
+        return newTicket;
+      },
+    );
+
+    await ctx.db
+      .insert(tickets)
+      .values(newTickets)
+      .onConflictDoUpdate({
+        target: tickets.card,
+        set: getOnConflictDoUpdateSet({
+          b1Id: "",
+          b2Id: "",
+          createdById: "",
+          company: "",
+          cardName: "",
+          card: "",
+        }),
+      });
+  }),
 });
+
+type clickUpTaskResponseType = {
+  name: string;
+  custom_fields: {
+    id: string;
+    value: {
+      id: number;
+    }[];
+  }[];
+  url: string;
+};
+
+async function getAllClickUpTickets({
+  listId,
+  token,
+}: {
+  listId: bigint;
+  token: string;
+}) {
+  const results: clickUpTaskResponseType[] = [];
+
+  let hasMoreContent = true;
+  let loopCount = 0;
+  while (hasMoreContent || loopCount > 10) {
+    const response = await fetch(
+      `https://api.clickup.com/api/v2/list/${listId}/task?page=${loopCount}`,
+      {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+          Authorization: token,
+        },
+      },
+    );
+
+    if (response.ok) {
+      const result = (await response.json()) as {
+        tasks: clickUpTaskResponseType[];
+        last_page: boolean;
+      };
+
+      hasMoreContent = !result.last_page;
+      results.push(...result.tasks);
+    } else {
+      const { err } = await getErrorFromClickupApi(response);
+      throw createError({
+        code: "PRECONDITION_FAILED",
+        message: `Erro ao buscar cards no clickup.\n\n Detalhes: ${err}`,
+      });
+    }
+
+    loopCount++;
+  }
+
+  return results;
+}

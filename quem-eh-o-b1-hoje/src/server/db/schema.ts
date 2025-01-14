@@ -120,7 +120,7 @@ export const tickets = createTable(
   "ticket",
   {
     id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
-    card: varchar("card", { length: 256 }).notNull(),
+    card: varchar("card", { length: 256 }).notNull().unique(),
     cardName: text("card_name").notNull(),
     linkedCard: varchar("linked_card", { length: 256 }),
     createdById: varchar("created_by", { length: 255 })
