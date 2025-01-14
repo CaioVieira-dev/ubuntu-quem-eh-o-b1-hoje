@@ -1,0 +1,1 @@
+ALTER TABLE "quem-eh-o-b1-hoje_ticket" ADD CONSTRAINT "quem-eh-o-b1-hoje_ticket_card_unique" UNIQUE("card");
