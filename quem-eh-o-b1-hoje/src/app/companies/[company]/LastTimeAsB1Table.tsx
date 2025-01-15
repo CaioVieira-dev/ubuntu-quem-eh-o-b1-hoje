@@ -16,6 +16,7 @@ import {
 } from "~/components/ui/accordion";
 import { api } from "~/trpc/react";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { getInitials } from "~/lib/utils";
 
 export function LastTimeAsB1Table() {
   const [lastTimeOfUsersAsB1OrB2] =
@@ -86,21 +87,5 @@ export function LastTimeAsB1Table() {
         </AccordionContent>
       </AccordionItem>
     </Accordion>
-  );
-}
-
-function getInitials(name: string) {
-  const parts = name.split(" ");
-  if (parts.length > 1) {
-    return (
-      (parts[0]?.charAt(0).toUpperCase() ?? "") +
-      (parts[parts.length - 1]?.charAt(0).toUpperCase() ?? "")
-    );
-  }
-
-  return (
-    parts[0]?.charAt(0).toUpperCase() ??
-    "" + parts[0]?.charAt(1).toUpperCase() ??
-    ""
   );
 }

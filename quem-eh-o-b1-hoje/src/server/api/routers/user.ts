@@ -14,19 +14,23 @@ export const userRouter = createTRPCRouter({
         canBeB1: clickUpUser.canBeB1,
         canBeB2: clickUpUser.canBeB2,
         isListed: clickUpUser.isListed,
+        profilePicture: clickUpUser.profilePicture,
       })
       .from(clickUpUser)
       .orderBy(asc(clickUpUser.username));
 
-    return possibleUsers.map(({ id, name, canBeB1, canBeB2, isListed }) => {
-      return {
-        name: name ?? "sem nome",
-        id,
-        canBeB1: Boolean(canBeB1),
-        canBeB2: Boolean(canBeB2),
-        isListed: Boolean(isListed),
-      };
-    });
+    return possibleUsers.map(
+      ({ id, name, canBeB1, canBeB2, isListed, profilePicture }) => {
+        return {
+          name: name ?? "sem nome",
+          id,
+          canBeB1: Boolean(canBeB1),
+          canBeB2: Boolean(canBeB2),
+          isListed: Boolean(isListed),
+          profilePicture,
+        };
+      },
+    );
   }),
   updateUser: protectedProcedure
     .input(
