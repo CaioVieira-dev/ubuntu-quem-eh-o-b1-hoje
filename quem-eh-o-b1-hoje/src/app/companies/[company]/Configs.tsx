@@ -70,7 +70,7 @@ export function Configs({ userId }: { userId: string }) {
           <FaCogs />
         </Button>
       </SheetTrigger>
-      <SheetContent className="overflow-y-scroll bg-gradient-to-b from-[#2e026d] to-[#15162c] pb-24 text-white [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gradient-to-b [&::-webkit-scrollbar-track]:from-[#2e026d] [&::-webkit-scrollbar-track]:to-[#15162c] [&::-webkit-scrollbar]:w-2">
+      <SheetContent className="overflow-y-scroll bg-gradient-to-b from-[#2e026d] to-[#15162c] pb-24 text-white [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-gradient-to-b [&::-webkit-scrollbar-track]:from-[#2e026d] [&::-webkit-scrollbar-track]:to-[#15162c] [&::-webkit-scrollbar]:w-2">
         <SheetHeader className="mb-4">
           <SheetTitle className="text-white">
             Configurações do usuario
