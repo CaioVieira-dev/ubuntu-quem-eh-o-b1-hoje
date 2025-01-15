@@ -92,21 +92,32 @@ export default function Company() {
           </TableHeader>
           <TableBody>
             {users?.map?.(
-              ({ id, name, canBeB1, canBeB2, isListed, profilePicture }) => (
+              ({
+                id,
+                name,
+                canBeB1,
+                canBeB2,
+                isListed,
+                profilePicture,
+                userColor,
+              }) => (
                 <TableRow key={id}>
                   <TableCell>
-                    {" "}
                     {
                       <Avatar>
                         <AvatarImage
                           src={profilePicture ?? ""}
                           alt="Foto do usuário"
                         />
-                        <AvatarFallback className="bg-slate-500">
+                        <AvatarFallback
+                          style={{
+                            backgroundColor: userColor ? userColor : "#64748b",
+                          }}
+                        >
                           {getInitials(name ?? "AV")}
                         </AvatarFallback>
                       </Avatar>
-                    }{" "}
+                    }
                   </TableCell>
                   <TableCell>{name}</TableCell>
                   <TableCell className="text-center">

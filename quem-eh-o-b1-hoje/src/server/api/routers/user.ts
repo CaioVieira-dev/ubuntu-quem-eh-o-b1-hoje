@@ -1,4 +1,4 @@
-import { aliasedTable, asc, count, eq, max, sql } from "drizzle-orm";
+import { aliasedTable, asc, count, eq, max } from "drizzle-orm";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { clickUpUser, tickets } from "~/server/db/schema";
 import { getUserConfigs } from "./clickUpConfig";
@@ -15,12 +15,13 @@ export const userRouter = createTRPCRouter({
         canBeB2: clickUpUser.canBeB2,
         isListed: clickUpUser.isListed,
         profilePicture: clickUpUser.profilePicture,
+        userColor: clickUpUser.color,
       })
       .from(clickUpUser)
       .orderBy(asc(clickUpUser.username));
 
     return possibleUsers.map(
-      ({ id, name, canBeB1, canBeB2, isListed, profilePicture }) => {
+      ({ id, name, canBeB1, canBeB2, isListed, profilePicture, userColor }) => {
         return {
           name: name ?? "sem nome",
           id,
@@ -28,6 +29,7 @@ export const userRouter = createTRPCRouter({
           canBeB2: Boolean(canBeB2),
           isListed: Boolean(isListed),
           profilePicture,
+          userColor,
         };
       },
     );
@@ -96,6 +98,7 @@ export const userRouter = createTRPCRouter({
         id: clickUpUser.id,
         profilePicture: clickUpUser.profilePicture,
         name: clickUpUser.username,
+        userColor: clickUpUser.color,
         b1Ticket: maxB1DateTicket.b1Id,
         lastTimeAsB1: maxB1DateTicket.maxB1TicketUpdatedAt,
         timesAsB1: maxB1DateTicket.timesAsB1,
@@ -133,6 +136,7 @@ export const userRouter = createTRPCRouter({
         username: string;
         email: string;
         profilePicture?: string;
+        color?: string;
       }[];
     };
 
@@ -147,6 +151,7 @@ export const userRouter = createTRPCRouter({
             username: "",
             email: "",
             profilePicture: "",
+            color: "",
           }),
         });
     }

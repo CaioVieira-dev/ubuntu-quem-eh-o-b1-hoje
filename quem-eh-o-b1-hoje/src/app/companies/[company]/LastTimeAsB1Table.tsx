@@ -51,6 +51,7 @@ export function LastTimeAsB1Table() {
                   timesAsB1,
                   timesAsB2,
                   profilePicture,
+                  userColor,
                 }) => (
                   <TableRow key={id}>
                     <TableCell>
@@ -60,7 +61,13 @@ export function LastTimeAsB1Table() {
                             src={profilePicture ?? ""}
                             alt="Foto do usuário"
                           />
-                          <AvatarFallback className="bg-slate-500">
+                          <AvatarFallback
+                            style={{
+                              backgroundColor: userColor
+                                ? userColor
+                                : "#64748b",
+                            }}
+                          >
                             {getInitials(name ?? "AV")}
                           </AvatarFallback>
                         </Avatar>
