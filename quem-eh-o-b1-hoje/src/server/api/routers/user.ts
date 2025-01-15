@@ -90,6 +90,7 @@ export const userRouter = createTRPCRouter({
     return ctx.db
       .select({
         id: clickUpUser.id,
+        profilePicture: clickUpUser.profilePicture,
         name: clickUpUser.username,
         b1Ticket: maxB1DateTicket.b1Id,
         lastTimeAsB1: maxB1DateTicket.maxB1TicketUpdatedAt,

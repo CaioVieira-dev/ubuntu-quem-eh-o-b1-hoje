@@ -15,6 +15,7 @@ import {
   AccordionTrigger,
 } from "~/components/ui/accordion";
 import { api } from "~/trpc/react";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 
 export function LastTimeAsB1Table() {
   const [lastTimeOfUsersAsB1OrB2] =
@@ -48,9 +49,22 @@ export function LastTimeAsB1Table() {
                   name,
                   timesAsB1,
                   timesAsB2,
+                  profilePicture,
                 }) => (
                   <TableRow key={id}>
-                    <TableCell>AV </TableCell>
+                    <TableCell>
+                      {
+                        <Avatar>
+                          <AvatarImage
+                            src={profilePicture ?? ""}
+                            alt="Foto do usuário"
+                          />
+                          <AvatarFallback className="bg-slate-500">
+                            {getInitials(name ?? "AV")}
+                          </AvatarFallback>
+                        </Avatar>
+                      }
+                    </TableCell>
                     <TableCell>{name}</TableCell>
                     <TableCell>{timesAsB1 ?? "-"}</TableCell>
                     <TableCell suppressHydrationWarning>
@@ -72,5 +86,21 @@ export function LastTimeAsB1Table() {
         </AccordionContent>
       </AccordionItem>
     </Accordion>
+  );
+}
+
+function getInitials(name: string) {
+  const parts = name.split(" ");
+  if (parts.length > 1) {
+    return (
+      (parts[0]?.charAt(0).toUpperCase() ?? "") +
+      (parts[parts.length - 1]?.charAt(0).toUpperCase() ?? "")
+    );
+  }
+
+  return (
+    parts[0]?.charAt(0).toUpperCase() ??
+    "" + parts[0]?.charAt(1).toUpperCase() ??
+    ""
   );
 }
