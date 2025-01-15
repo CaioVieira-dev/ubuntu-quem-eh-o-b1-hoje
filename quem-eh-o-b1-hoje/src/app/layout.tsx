@@ -16,7 +16,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${GeistSans.variable}`}>
-      <body>
+      <body className="[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-gradient-to-b [&::-webkit-scrollbar-track]:from-[#2e026d] [&::-webkit-scrollbar-track]:to-[#15162c] [&::-webkit-scrollbar]:w-2">
         <TRPCReactProvider>{children}</TRPCReactProvider>
       </body>
     </html>

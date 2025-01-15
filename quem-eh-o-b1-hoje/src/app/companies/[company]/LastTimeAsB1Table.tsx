@@ -15,6 +15,8 @@ import {
   AccordionTrigger,
 } from "~/components/ui/accordion";
 import { api } from "~/trpc/react";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { getInitials } from "~/lib/utils";
 
 export function LastTimeAsB1Table() {
   const [lastTimeOfUsersAsB1OrB2] =
@@ -48,9 +50,29 @@ export function LastTimeAsB1Table() {
                   name,
                   timesAsB1,
                   timesAsB2,
+                  profilePicture,
+                  userColor,
                 }) => (
                   <TableRow key={id}>
-                    <TableCell>AV </TableCell>
+                    <TableCell>
+                      {
+                        <Avatar>
+                          <AvatarImage
+                            src={profilePicture ?? ""}
+                            alt="Foto do usuário"
+                          />
+                          <AvatarFallback
+                            style={{
+                              backgroundColor: userColor
+                                ? userColor
+                                : "#64748b",
+                            }}
+                          >
+                            {getInitials(name ?? "AV")}
+                          </AvatarFallback>
+                        </Avatar>
+                      }
+                    </TableCell>
                     <TableCell>{name}</TableCell>
                     <TableCell>{timesAsB1 ?? "-"}</TableCell>
                     <TableCell suppressHydrationWarning>

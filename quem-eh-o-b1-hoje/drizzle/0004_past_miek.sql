@@ -1,0 +1,1 @@
+ALTER TABLE "quem-eh-o-b1-hoje_click_up_user" ADD COLUMN "color" varchar(255);

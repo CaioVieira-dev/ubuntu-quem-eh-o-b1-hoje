@@ -180,6 +180,7 @@ export const clickUpUser = createTable("click_up_user", {
   canBeB1: boolean("can_be_b1"),
   canBeB2: boolean("can_be_b2"),
   isListed: boolean("is_listed"),
+  color: varchar("color", { length: 255 }),
 });
 
 export const clickUpUsersRelations = relations(

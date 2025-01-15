@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback } from "react";
 import { FaArrowLeft, FaUserPlus } from "react-icons/fa6";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import {
@@ -15,6 +16,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { showErrorToast, showSuccessToast } from "~/lib/toasts-helpers";
+import { getInitials } from "~/lib/utils";
 import { api } from "~/trpc/react";
 
 export default function Company() {
@@ -89,54 +91,80 @@ export default function Company() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users?.map?.(({ id, name, canBeB1, canBeB2, isListed }) => (
-              <TableRow key={id}>
-                <TableCell>AV </TableCell>
-                <TableCell>{name}</TableCell>
-                <TableCell className="text-center">
-                  <Checkbox
-                    className="border-white"
-                    checked={isListed}
-                    onCheckedChange={(value) =>
-                      updateClickupUser({
-                        id,
-                        field: "isListed",
-                        value: getValueFromCheckedState(value),
-                      })
+            {users?.map?.(
+              ({
+                id,
+                name,
+                canBeB1,
+                canBeB2,
+                isListed,
+                profilePicture,
+                userColor,
+              }) => (
+                <TableRow key={id}>
+                  <TableCell>
+                    {
+                      <Avatar>
+                        <AvatarImage
+                          src={profilePicture ?? ""}
+                          alt="Foto do usuário"
+                        />
+                        <AvatarFallback
+                          style={{
+                            backgroundColor: userColor ? userColor : "#64748b",
+                          }}
+                        >
+                          {getInitials(name ?? "AV")}
+                        </AvatarFallback>
+                      </Avatar>
                     }
-                    disabled={isPending}
-                  />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Checkbox
-                    className="border-white"
-                    checked={canBeB1}
-                    onCheckedChange={(value) =>
-                      updateClickupUser({
-                        id,
-                        field: "canBeB1",
-                        value: getValueFromCheckedState(value),
-                      })
-                    }
-                    disabled={isPending}
-                  />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Checkbox
-                    className="border-white"
-                    checked={canBeB2}
-                    onCheckedChange={(value) =>
-                      updateClickupUser({
-                        id,
-                        field: "canBeB2",
-                        value: getValueFromCheckedState(value),
-                      })
-                    }
-                    disabled={isPending}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell>{name}</TableCell>
+                  <TableCell className="text-center">
+                    <Checkbox
+                      className="border-white"
+                      checked={isListed}
+                      onCheckedChange={(value) =>
+                        updateClickupUser({
+                          id,
+                          field: "isListed",
+                          value: getValueFromCheckedState(value),
+                        })
+                      }
+                      disabled={isPending}
+                    />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Checkbox
+                      className="border-white"
+                      checked={canBeB1}
+                      onCheckedChange={(value) =>
+                        updateClickupUser({
+                          id,
+                          field: "canBeB1",
+                          value: getValueFromCheckedState(value),
+                        })
+                      }
+                      disabled={isPending}
+                    />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Checkbox
+                      className="border-white"
+                      checked={canBeB2}
+                      onCheckedChange={(value) =>
+                        updateClickupUser({
+                          id,
+                          field: "canBeB2",
+                          value: getValueFromCheckedState(value),
+                        })
+                      }
+                      disabled={isPending}
+                    />
+                  </TableCell>
+                </TableRow>
+              ),
+            )}
           </TableBody>
         </Table>
       </div>
