@@ -18,17 +18,39 @@ import {
 import { showErrorToast, showSuccessToast } from "~/lib/toasts-helpers";
 import { getInitials } from "~/lib/utils";
 import { api } from "~/trpc/react";
+import { MdOutlineCloudSync } from "react-icons/md";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "~/components/ui/form";
+import { Input } from "~/components/ui/input";
 
 export default function Company() {
   const params = useParams<{ company: string }>();
   const utils = api.useUtils();
   const [users] = api.user.getUsers.useSuspenseQuery();
+
   const { mutate: updateUser, isPending } = api.user.updateUser.useMutation({
     async onSuccess() {
       await utils.user.invalidate();
     },
     onError: showErrorToast,
   });
+  const { mutate: populateTickets, isPending: isPopulatingTickets } =
+    api.ticket.populateTickets.useMutation({
+      async onSuccess() {
+        showSuccessToast("Cards populados com sucesso");
+        await utils.ticket.invalidate();
+      },
+      onError: showErrorToast,
+    });
   const { mutate: populateUsers } = api.user.populateClickupUsers.useMutation({
     onSuccess() {
       showSuccessToast("Usuários salvos com sucesso");
@@ -168,6 +190,87 @@ export default function Company() {
           </TableBody>
         </Table>
       </div>
+
+      <div className="flex w-full flex-col gap-2">
+        <h3 className="flex w-full items-center justify-center gap-2 text-xl font-extrabold tracking-tight sm:text-[2rem]">
+          Outras configurações:
+        </h3>
+        <div className="flex items-center justify-center gap-2 border-t-2 py-4">
+          <div>Sincronizar cards da lista</div>
+          <Button
+            type="button"
+            variant={"secondary"}
+            onClick={() => populateTickets()}
+            disabled={isPopulatingTickets}
+            className="px-4"
+          >
+            <MdOutlineCloudSync />
+            Popular cards
+          </Button>
+        </div>
+        <div className="flex items-center justify-center gap-2">
+          <InviteForm />
+        </div>
+      </div>
     </div>
+  );
+}
+
+const inviteFormSchema = z.object({
+  email: z.string().email(),
+});
+
+function InviteForm() {
+  const form = useForm<z.infer<typeof inviteFormSchema>>({
+    resolver: zodResolver(inviteFormSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const { mutate: createInvite } = api.invite.create.useMutation({
+    onSuccess() {
+      showSuccessToast("Usuário convidado com sucesso");
+      form.reset();
+    },
+    onError: showErrorToast,
+  });
+
+  const submit = useCallback(
+    (formDate: z.infer<typeof inviteFormSchema>) => {
+      createInvite(formDate);
+    },
+    [createInvite],
+  );
+
+  return (
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(submit)}
+        className="mb-4 flex w-3/4 gap-2"
+      >
+        <FormField
+          name="email"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="flex w-full items-center space-y-0">
+              <FormLabel className="w-1/3">Convide novos usuarios:</FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  placeholder="Digite um email..."
+                  {...field}
+                ></Input>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        ></FormField>
+        <Button type="submit" variant={"secondary"}>
+          <FaUserPlus />
+          Convidar
+        </Button>
+      </form>
+    </Form>
   );
 }
