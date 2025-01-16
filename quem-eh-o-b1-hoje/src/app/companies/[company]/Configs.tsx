@@ -6,13 +6,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaCogs, FaSave } from "react-icons/fa";
-import { MdOutlineCloudSync } from "react-icons/md";
-import {
-  FaArrowRight,
-  FaRegEye,
-  FaRegEyeSlash,
-  FaUserPlus,
-} from "react-icons/fa6";
+import { FaArrowRight, FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import {
@@ -33,7 +27,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "~/components/ui/sheet";
-import { showErrorToast, showSuccessToast } from "~/lib/toasts-helpers";
+import { showSuccessToast } from "~/lib/toasts-helpers";
 import { api } from "~/trpc/react";
 
 const formSchema = z.object({
@@ -53,15 +47,6 @@ const formSchema = z.object({
 
 export function Configs({ userId }: { userId: string }) {
   const params = useParams<{ company: string }>();
-  const utils = api.useUtils();
-  const { mutate: populateTickets, isPending: isPopulatingTickets } =
-    api.ticket.populateTickets.useMutation({
-      async onSuccess() {
-        showSuccessToast("Cards populados com sucesso");
-        await utils.ticket.invalidate();
-      },
-      onError: showErrorToast,
-    });
 
   return (
     <Sheet>
@@ -86,20 +71,6 @@ export function Configs({ userId }: { userId: string }) {
           >
             Outras configurações <FaArrowRight />
           </Link>
-        </div>
-        <div className="flex flex-col gap-2 border-t-2 py-4">
-          <Button
-            type="button"
-            variant={"secondary"}
-            onClick={() => populateTickets()}
-            disabled={isPopulatingTickets}
-          >
-            <MdOutlineCloudSync />
-            Popular cards
-          </Button>
-        </div>
-        <div className="flex flex-col gap-2 border-t-2 py-4">
-          <InviteForm />
         </div>
       </SheetContent>
     </Sheet>
@@ -298,65 +269,6 @@ function UserConfigForm({ userId }: { userId: string }) {
         <Button type="submit" variant={"secondary"}>
           <FaSave />
           Salvar
-        </Button>
-      </form>
-    </Form>
-  );
-}
-
-const inviteFormSchema = z.object({
-  email: z.string().email(),
-});
-
-function InviteForm() {
-  const form = useForm<z.infer<typeof inviteFormSchema>>({
-    resolver: zodResolver(inviteFormSchema),
-    defaultValues: {
-      email: "",
-    },
-  });
-
-  const { mutate: createInvite } = api.invite.create.useMutation({
-    onSuccess() {
-      showSuccessToast("Usuário convidado com sucesso");
-      form.reset();
-    },
-    onError: showErrorToast,
-  });
-
-  const submit = useCallback(
-    (formDate: z.infer<typeof inviteFormSchema>) => {
-      createInvite(formDate);
-    },
-    [createInvite],
-  );
-
-  return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(submit)}
-        className="mb-4 flex flex-col gap-2"
-      >
-        <FormField
-          name="email"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Convide novos usuarios:</FormLabel>
-              <FormControl>
-                <Input
-                  type="email"
-                  placeholder="Digite um email..."
-                  {...field}
-                ></Input>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        ></FormField>
-        <Button type="submit" variant={"secondary"}>
-          <FaUserPlus />
-          Convidar
         </Button>
       </form>
     </Form>
