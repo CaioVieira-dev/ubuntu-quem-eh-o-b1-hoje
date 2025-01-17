@@ -1,4 +1,4 @@
-# Qhem é o B1 hoje?
+# Quem é o B1 hoje?
 
 Projetinho para mergulhar no nextJs e na API do ClickUp :)
 
