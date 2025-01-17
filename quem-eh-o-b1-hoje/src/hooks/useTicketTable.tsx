@@ -1,6 +1,7 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { FaArrowLeft, FaCheckDouble, FaPencil, FaTrash } from "react-icons/fa6";
 import { FaSave, FaSync, FaUndoAlt } from "react-icons/fa";
+import { TbClockEdit } from "react-icons/tb";
 
 import { type ColumnDef } from "@tanstack/react-table";
 import { Input } from "~/components/ui/input";
@@ -24,6 +25,8 @@ interface DataItem {
   card: string;
   cardName: string;
   ticketId: number;
+  b1UpdatedAt: Date | null;
+  b2UpdatedAt: Date | null;
 }
 
 export function useTicketTable({ isClosed }: { isClosed: boolean }) {
@@ -123,17 +126,21 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
     );
 
     if (oldTicket) {
-      const { card, b1, b2 } = tempData[id] as {
+      const { card, b1, b2, b1UpdatedAt, b2UpdatedAt } = tempData[id] as {
         b1: bType | "null";
         b2: bType | "null";
         card: string;
         cardName: string;
         ticketId: number;
+        b1UpdatedAt?: Date;
+        b2UpdatedAt?: Date;
       };
       const updatedTicket: {
         card: string;
         b1Id?: number | null | undefined;
         b2Id?: number | null | undefined;
+        b1UpdatedAt?: Date;
+        b2UpdatedAt?: Date;
       } = {
         card,
       };
@@ -147,6 +154,14 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
         updatedTicket.b2Id = null;
       } else if (b2 !== "null" && b2.id !== oldTicket?.b2?.id) {
         updatedTicket.b2Id = b2.id;
+      }
+
+      if (b1UpdatedAt) {
+        updatedTicket.b1UpdatedAt = new Date(b1UpdatedAt);
+      }
+
+      if (b2UpdatedAt) {
+        updatedTicket.b2UpdatedAt = new Date(b2UpdatedAt);
       }
 
       update({ ...updatedTicket, ticketId: id });
@@ -233,34 +248,44 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
 
         if (isEditing) {
           const value = tempData[row.original.ticketId]?.b1?.id;
+          const timeValue = tempData[row.original.ticketId]?.b1UpdatedAt;
 
           return (
-            <Select
-              value={`${value}`}
-              onValueChange={(newValue) => {
-                updateTempData(
-                  row.original.ticketId,
-                  "b1",
-                  users.find((u) => u?.id === parseInt(newValue, 10)) ?? "null",
-                );
-              }}
-              disabled={isSaving}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem key={-1} value={"null"}>
-                  <span className="w-100 p-3"></span>
-                </SelectItem>
-
-                {possibleB1Users.map(({ id, name }) => (
-                  <SelectItem key={id} value={`${id}`}>
-                    {name}
+            <div className="flex">
+              <Select
+                value={`${value}`}
+                onValueChange={(newValue) => {
+                  updateTempData(
+                    row.original.ticketId,
+                    "b1",
+                    users.find((u) => u?.id === parseInt(newValue, 10)) ??
+                      "null",
+                  );
+                }}
+                disabled={isSaving}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem key={-1} value={"null"}>
+                    <span className="w-100 p-3"></span>
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+                  {possibleB1Users.map(({ id, name }) => (
+                    <SelectItem key={id} value={`${id}`}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <DatePicker
+                ticketId={row.original.ticketId}
+                timeValue={timeValue}
+                updateTempData={updateTempData}
+                fieldName="b1UpdatedAt"
+              />
+            </div>
           );
         }
 
@@ -281,34 +306,44 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
 
         if (isEditing) {
           const value = tempData[row.original.ticketId]?.b2?.id;
+          const timeValue = tempData[row.original.ticketId]?.b2UpdatedAt;
 
           return (
-            <Select
-              value={`${value}`}
-              onValueChange={(newValue) => {
-                updateTempData(
-                  row.original.ticketId,
-                  "b2",
-                  users.find((u) => u?.id === parseInt(newValue, 10)) ?? "null",
-                );
-              }}
-              disabled={isSaving}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem key={-1} value={"null"}>
-                  <span className="w-100 p-3"></span>
-                </SelectItem>
-
-                {possibleB2Users.map(({ id, name }) => (
-                  <SelectItem key={id} value={`${id}`}>
-                    {name}
+            <div className="flex">
+              <Select
+                value={`${value}`}
+                onValueChange={(newValue) => {
+                  updateTempData(
+                    row.original.ticketId,
+                    "b2",
+                    users.find((u) => u?.id === parseInt(newValue, 10)) ??
+                      "null",
+                  );
+                }}
+                disabled={isSaving}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem key={-1} value={"null"}>
+                    <span className="w-100 p-3"></span>
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+                  {possibleB2Users.map(({ id, name }) => (
+                    <SelectItem key={id} value={`${id}`}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <DatePicker
+                ticketId={row.original.ticketId}
+                timeValue={timeValue}
+                updateTempData={updateTempData}
+                fieldName="b2UpdatedAt"
+              />
+            </div>
           );
         }
 
@@ -417,4 +452,50 @@ export function useTicketTable({ isClosed }: { isClosed: boolean }) {
     },
     total: totalPages,
   };
+}
+
+function DatePicker({
+  ticketId,
+  timeValue,
+  updateTempData,
+  fieldName,
+}: {
+  timeValue: Date | null | undefined;
+  updateTempData: (id: number, field: string, value: unknown) => void;
+  ticketId: number;
+  fieldName: string;
+}) {
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const togglePicker = (): void => {
+    if (inputRef.current) {
+      if (isPickerOpen) {
+        inputRef.current.blur();
+        setIsPickerOpen(false);
+      } else {
+        inputRef.current.focus();
+        inputRef.current.showPicker?.();
+        setIsPickerOpen(true);
+      }
+    }
+  };
+  return (
+    <div className="relative inline-block">
+      <Button
+        onClick={togglePicker}
+        variant={"ghost"}
+        size={"icon"}
+        title="Editar data de inclusão"
+      >
+        <TbClockEdit />
+      </Button>
+      <input
+        ref={inputRef}
+        value={timeValue !== null ? (timeValue as unknown as string) : ""}
+        onChange={(e) => updateTempData(ticketId, fieldName, e.target.value)}
+        type="datetime-local"
+        className="absolute h-full w-0 cursor-pointer opacity-0"
+      />
+    </div>
+  );
 }

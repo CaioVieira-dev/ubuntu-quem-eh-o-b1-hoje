@@ -15,7 +15,11 @@ const createTicketSchema = z.object({
   shouldCreateALinkedCard: z.boolean().optional(),
 });
 const updateTicketSchema = createTicketSchema.and(
-  z.object({ ticketId: z.number() }),
+  z.object({
+    ticketId: z.number(),
+    b1UpdatedAt: z.date().optional(),
+    b2UpdatedAt: z.date().optional(),
+  }),
 );
 
 type createTicketType = z.infer<typeof createTicketSchema>;
@@ -240,7 +244,7 @@ export const ticketRouter = createTRPCRouter({
   update: protectedProcedure
     .input(updateTicketSchema)
     .mutation(async ({ ctx, input }) => {
-      const { card, b1Id, b2Id, ticketId } = input;
+      const { card, b1Id, b2Id, ticketId, b1UpdatedAt, b2UpdatedAt } = input;
       const oldTicket = await ctx.db.query.tickets.findFirst({
         where: ({ id }, { eq }) => eq(id, ticketId),
       });
@@ -326,6 +330,14 @@ export const ticketRouter = createTRPCRouter({
         }
 
         await setClickupCardCustomField(params);
+      }
+
+      if (b1UpdatedAt) {
+        newTicket.b1UpdatedAt = b1UpdatedAt;
+      }
+
+      if (b2UpdatedAt) {
+        newTicket.b2UpdatedAt = b2UpdatedAt;
       }
 
       await ctx.db
@@ -473,10 +485,13 @@ export const ticketRouter = createTRPCRouter({
         card: string;
         cardName: string;
         ticketId: number;
+        b1UpdatedAt: Date | null;
+        b2UpdatedAt: Date | null;
       }[] = [];
 
       for (const { b1User, b2User, tickets } of companyTickets) {
-        const { card, id, b1Id, b2Id, cardName } = tickets;
+        const { card, id, b1Id, b2Id, cardName, b1UpdatedAt, b2UpdatedAt } =
+          tickets;
         const { username: b1Name } = b1User ?? {};
         const { username: b2Name } = b2User ?? {};
 
@@ -486,6 +501,8 @@ export const ticketRouter = createTRPCRouter({
           card,
           cardName,
           ticketId: id,
+          b1UpdatedAt,
+          b2UpdatedAt,
         });
       }
       const total =
